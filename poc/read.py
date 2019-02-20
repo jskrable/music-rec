@@ -1,17 +1,19 @@
 import os
 import tables
 import glob
+import time
 import pandas as pd
 import numpy as np
 from pandas import DataFrame, HDFStore
 
-temp = HDFStore('./MillionSongSubset/data/A/A/A/TRAAAAW128F429D538.h5')
-song = pd.DataFrame.from_records(temp.root.metadata.songs[:])
-artist = song.artist_name[0].decode()
+# temp = HDFStore('./MillionSongSubset/data/A/A/A/TRAAAAW128F429D538.h5')
+# song = pd.DataFrame.from_records(temp.root.metadata.songs[:])
+# artist = song.artist_name[0].decode()
+# temp.close()
 
-store = HDFStore('test.h5')
+# store = HDFStore('test.h5')
 
-def get_all_files(basedir,ext='.h5') :
+def get_all_files(basedir, ext='.h5'):
     """
     From a root directory, go through all subdirectories
     and find all files with the given extension.
@@ -19,27 +21,35 @@ def get_all_files(basedir,ext='.h5') :
     """
     allfiles = []
     for root, dirs, files in os.walk(basedir):
-        files = glob.glob(os.path.join(root,'*'+ext))
-        for f in files :
-            allfiles.append( os.path.abspath(f) )
+        files = glob.glob(os.path.join(root, '*'+ext))
+        for f in files:
+            allfiles.append(os.path.abspath(f))
     return allfiles
 
 
 # From a list of h5 files, extracts song metadata and creates a dataframe
 def extract_song_data(files):
-	allsongs = pd.DataFrame()
-	limit = 1000
-	for i in range(0,limit):
-		print('Getting',files[i])
-		s_hdf = pd.HDFStore(files[i])
-		# print(s_hdf)
-		s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
-		# print(s_df)
-		allsongs = allsongs.append(s_df, ignore_index=True)
+    allsongs = pd.DataFrame()
+    limit = 1000
+    size = len(files)
+    limit = size
+    for i in range(0, limit):
+        complete = str(round((i/limit)*100,2))
+        print(complete+'% of files processed', end='\r', flush=True)
+        s_hdf = pd.HDFStore(files[i])
+        s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
+        allsongs = allsongs.append(s_df, ignore_index=True)
+        s_hdf.close()
 
-	return allsongs
+    return allsongs
 
 
 # Main
-files = get_all_files('./MillionSongSubset/data','.h5')
+t1 = time.time()
+files = get_all_files('./MillionSongSubset/data', '.h5')
+t2 = time.time()
 songsDF = extract_song_data(files)
+t3 = time.time()
+
+print('Got', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
+# print(songsDF)
