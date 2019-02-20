@@ -22,3 +22,23 @@ def get_all_files(basedir,ext='.h5') :
         for f in files :
             allfiles.append( os.path.abspath(f) )
     return allfiles
+
+
+# From a list of h5 files, extracts song metadata and creates a dataframe
+def extract_song_data(files):
+	allsongs = pd.DataFrame()
+    limit = 1000
+    for i in range(0,limit):
+    	print('Getting',f)
+        s_hdf = pd.HDFStore(files[i])
+        # print(s_hdf)
+        s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
+        # print(s_df)
+        allsongs = allsongs.append(s_df, ignore_index=True)
+
+    return allsongs
+
+
+# Main
+files = get_all_files('./MillionSongSubset/data','.h5')
+songsDF = extract_song_data(files)
