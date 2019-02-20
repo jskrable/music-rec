@@ -1,12 +1,13 @@
 import os
 import tables
+import glob
 import pandas as pd
 import numpy as np
 from pandas import DataFrame, HDFStore
 
 temp = HDFStore('./MillionSongSubset/data/A/A/A/TRAAAAW128F429D538.h5')
 song = pd.DataFrame.from_records(temp.root.metadata.songs[:])
-artist song.artist_name[0].decode()
+artist = song.artist_name[0].decode()
 
 store = HDFStore('test.h5')
 
@@ -27,16 +28,16 @@ def get_all_files(basedir,ext='.h5') :
 # From a list of h5 files, extracts song metadata and creates a dataframe
 def extract_song_data(files):
 	allsongs = pd.DataFrame()
-    limit = 1000
-    for i in range(0,limit):
-    	print('Getting',f)
-        s_hdf = pd.HDFStore(files[i])
-        # print(s_hdf)
-        s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
-        # print(s_df)
-        allsongs = allsongs.append(s_df, ignore_index=True)
+	limit = 1000
+	for i in range(0,limit):
+		print('Getting',files[i])
+		s_hdf = pd.HDFStore(files[i])
+		# print(s_hdf)
+		s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
+		# print(s_df)
+		allsongs = allsongs.append(s_df, ignore_index=True)
 
-    return allsongs
+	return allsongs
 
 
 # Main
