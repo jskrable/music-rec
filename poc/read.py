@@ -13,7 +13,10 @@ from pandas import DataFrame, HDFStore
 
 # store = HDFStore('test.h5')
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3de93ddae4ad8209e2b55faa2c029f2b89b9c07e
 def get_all_files(basedir, ext='.h5'):
     """
     From a root directory, go through all subdirectories
@@ -33,14 +36,22 @@ def extract_song_data(files):
     allsongs = pd.DataFrame()
     limit = 1000
     size = len(files)
+<<<<<<< HEAD
     # limit = size
     for i in range(0, limit):
         complete = '[ '+str(round((i/limit)*100, 2))+'% ]'
         print(complete, 'of files processed', end='\r', flush=True)
+=======
+    limit = size
+    for i in range(0, limit):
+        complete = str(round((i/limit)*100,2))
+        print(complete+'% of files processed', end='\r', flush=True)
+>>>>>>> 3de93ddae4ad8209e2b55faa2c029f2b89b9c07e
         s_hdf = pd.HDFStore(files[i])
         s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
         allsongs = allsongs.append(s_df, ignore_index=True)
         s_hdf.close()
+<<<<<<< HEAD
 
     return allsongs
 
@@ -53,6 +64,10 @@ def convert_byte_data(df):
         df[col] = str_df[col]
 
     return df
+=======
+
+    return allsongs
+>>>>>>> 3de93ddae4ad8209e2b55faa2c029f2b89b9c07e
 
 
 # Main
@@ -63,8 +78,11 @@ songsDF = extract_song_data(files)
 t3 = time.time()
 
 print('Got', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
+<<<<<<< HEAD
 
 print('Storing in HDF5...')
 songsDF = convert_byte_data(songsDF)
 songsDF.to_hdf('preprocessing/songs.h5', 'songs')
+=======
+>>>>>>> 3de93ddae4ad8209e2b55faa2c029f2b89b9c07e
 # print(songsDF)
