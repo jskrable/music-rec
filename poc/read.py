@@ -44,6 +44,9 @@ def extract_song_data(files):
         s_hdf = pd.HDFStore(f)
         # Create dfs from store tables
         # TODO get numpy arrays here too
+        # set(s_hdf)
+        # for row in s_hdf.root.analysis.segments_timbre.iterrows():
+        #     print(row)
         meta = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
         analysis = pd.DataFrame.from_records(s_hdf.root.analysis.songs[:])
         # combine into song df
