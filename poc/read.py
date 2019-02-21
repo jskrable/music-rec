@@ -20,6 +20,7 @@ def progress(count, total, suffix=''):
 
 # Get list of all h5 files in basedir
 def get_all_files(basedir, ext='.h5'):
+    print('Getting list of all h5 files in',basedir)
     allfiles = []
     for root, dirs, files in os.walk(basedir):
         files = glob.glob(os.path.join(root, '*'+ext))
@@ -41,10 +42,14 @@ def extract_song_data(files):
         progress(i, size, 'of files processed')
         # Read file into store
         s_hdf = pd.HDFStore(f)
-        # Create df from store
-        s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
+        # Create dfs from store tables
+        # TODO get numpy arrays here too
+        meta = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
+        analysis = pd.DataFrame.from_records(s_hdf.root.analysis.songs[:])
+        # combine into song df
+        song = pd.concat([meta, analysis], axis=1, sort=False)
         # Append to main df
-        allsongs = allsongs.append(s_df, ignore_index=True)
+        allsongs = allsongs.append(song, ignore_index=True)
         # Close store for reading
         s_hdf.close()
 
@@ -65,7 +70,6 @@ def convert_byte_data(df):
 ###############################################################################
 
 t1 = time.time()
-print('Getting list of all h5 files...')
 files = get_all_files('./MillionSongSubset/data', '.h5')
 t2 = time.time()
 songsDF = extract_song_data(files)
@@ -73,7 +77,7 @@ t3 = time.time()
 
 print('\nGot', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
 
-print('Storing song metadata in HDF5...')
+print('Storing compiled song dataframe in HDF5...')
 songsDF = convert_byte_data(songsDF)
 songsDF.to_hdf('preprocessing/songs.h5', 'songs')
 # print(songsDF)
