@@ -7,12 +7,6 @@ import pandas as pd
 import numpy as np
 from pandas import DataFrame, HDFStore
 
-# temp = HDFStore('./MillionSongSubset/data/A/A/A/TRAAAAW128F429D538.h5')
-# song = pd.DataFrame.from_records(temp.root.metadata.songs[:])
-# artist = song.artist_name[0].decode()
-# temp.close()
-
-# store = HDFStore('test.h5')
 
 # Progress bar for cli
 def progress(count, total, suffix=''):
@@ -24,12 +18,8 @@ def progress(count, total, suffix=''):
     sys.stdout.flush()
 
 
+# Get list of all h5 files in basedir
 def get_all_files(basedir, ext='.h5'):
-    """
-    From a root directory, go through all subdirectories
-    and find all files with the given extension.
-    Return all absolute paths in a list.
-    """
     allfiles = []
     for root, dirs, files in os.walk(basedir):
         files = glob.glob(os.path.join(root, '*'+ext))
@@ -40,15 +30,22 @@ def get_all_files(basedir, ext='.h5'):
 
 # From a list of h5 files, extracts song metadata and creates a dataframe
 def extract_song_data(files):
+    # Init empty df
     allsongs = pd.DataFrame()
+    # Get total h5 file count
     size = len(files)
-    print(size,'files found.')
+    print(size, 'files found.')
+    # Iter thru files
     for i, f in enumerate(files):
+        # Update progress bar
         progress(i, size, 'of files processed')
-        # print(complete, 'of files processed', end='\r', flush=True)
+        # Read file into store
         s_hdf = pd.HDFStore(f)
+        # Create df from store
         s_df = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
+        # Append to main df
         allsongs = allsongs.append(s_df, ignore_index=True)
+        # Close store for reading
         s_hdf.close()
 
     return allsongs
@@ -64,7 +61,9 @@ def convert_byte_data(df):
     return df
 
 
-# Main
+# MAIN
+###############################################################################
+
 t1 = time.time()
 print('Getting list of all h5 files...')
 files = get_all_files('./MillionSongSubset/data', '.h5')
@@ -72,9 +71,9 @@ t2 = time.time()
 songsDF = extract_song_data(files)
 t3 = time.time()
 
-print('\n','Got', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
+print('\nGot', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
 
-print('Storing in HDF5...')
+print('Storing song metadata in HDF5...')
 songsDF = convert_byte_data(songsDF)
 songsDF.to_hdf('preprocessing/songs.h5', 'songs')
 # print(songsDF)
