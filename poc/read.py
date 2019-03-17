@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# coding: utf-8
+"""
+read.py
+02-22-19
+jack skrable
+"""
+
 import os
 import sys
 import tables
@@ -5,7 +13,7 @@ import glob
 import time
 import pandas as pd
 import numpy as np
-from pandas import DataFrame, HDFStore
+# from pandas import DataFrame, HDFStore
 
 
 # Progress bar for cli
@@ -48,7 +56,26 @@ def extract_song_data(files):
         # for row in s_hdf.root.analysis.segments_timbre.iterrows():
         #     print(row)
         meta = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
-        analysis = pd.DataFrame.from_records(s_hdf.root.analysis.songs[:])
+        meta['artist_terms'] = [np.array(temp.root.metadata.artist_terms)]
+
+        data = pd.DataFrame()
+        for item in temp.root._f_walknodes():
+            name = item._v_pathname[1:].replace('/','_')
+            if type(item) is tables.earray.EArray:
+                data[name] = [np.array(item)]
+            elif type(item) is tables.table.Table:
+                cols =  item.coldescrs.keys()
+                for row in item:
+                    for col in cols:
+                        col_name = '_'.join([name,col])
+                        try:
+                            data[col_name] = row[col]
+                        except Exception as e:
+                            print(e)
+
+
+
+
         # combine into song df
         song = pd.concat([meta, analysis], axis=1, sort=False)
         # Append to main df
