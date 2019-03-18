@@ -50,20 +50,18 @@ def extract_song_data(files):
         progress(i, size, 'of files processed')
         # Read file into store
         s_hdf = pd.HDFStore(f)
-        # Create dfs from store tables
-        # TODO get numpy arrays here too
-        # set(s_hdf)
-        # for row in s_hdf.root.analysis.segments_timbre.iterrows():
-        #     print(row)
-        meta = pd.DataFrame.from_records(s_hdf.root.metadata.songs[:])
-        meta['artist_terms'] = [np.array(temp.root.metadata.artist_terms)]
-
+        # DF to hold single file info
         data = pd.DataFrame()
-        for item in temp.root._f_walknodes():
+        # Walk nodes under root
+        for item in s_hdf.root._f_walknodes():
+            # Get name for column
             name = item._v_pathname[1:].replace('/','_')
+            # Store arrays
             if type(item) is tables.earray.EArray:
                 data[name] = [np.array(item)]
+            # Store tables
             elif type(item) is tables.table.Table:
+                # Get all columns
                 cols =  item.coldescrs.keys()
                 for row in item:
                     for col in cols:
@@ -77,9 +75,9 @@ def extract_song_data(files):
 
 
         # combine into song df
-        song = pd.concat([meta, analysis], axis=1, sort=False)
+        # song = pd.concat([meta, analysis], axis=1, sort=False)
         # Append to main df
-        allsongs = allsongs.append(song, ignore_index=True)
+        allsongs = allsongs.append(data, ignore_index=True)
         # Close store for reading
         s_hdf.close()
 
@@ -102,12 +100,14 @@ def convert_byte_data(df):
 t1 = time.time()
 files = get_all_files('./MillionSongSubset/data', '.h5')
 t2 = time.time()
-songsDF = extract_song_data(files)
+
+dev_set = files[:50]
+songsDF = extract_song_data(dev_set)
 t3 = time.time()
 
 print('\nGot', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
-
-print('Storing compiled song dataframe in HDF5...')
 songsDF = convert_byte_data(songsDF)
-songsDF.to_hdf('preprocessing/songs.h5', 'songs')
+
+# print('Storing compiled song dataframe in HDF5...')
+# songsDF.to_hdf('preprocessing/songs.h5', 'songs')
 # print(songsDF)
