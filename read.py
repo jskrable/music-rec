@@ -90,15 +90,20 @@ def convert_byte_data(df):
     for col in set(obj_df):
         if isinstance(obj_df[col][0], bytes):
             str_cols.append(col)
-        elif str(obj_df.metadata_artist_terms[0].dtype)[1]:
-            # HANDLE NUMPY ARRAY DECODING HERE
-            col.astype('U')
+        elif str(obj_df.metadata_artist_terms[0].dtype)[1] == 'S':
             np_str_cols.append(col)
 
     str_df = obj_df[str_cols]
     str_df = str_df.stack().str.decode('utf-8').unstack()
     for col in str_df:
         df[col] = str_df[col]
+
+    np_str_df = obj_df[np_str_cols]
+    for col in np_str_cols:
+        try: 
+            df[col] = np_str_df[col].apply(lambda x: x.astype('U'))
+        except UnicodeDecodeError as e:
+            print(e)
 
     return df
 
