@@ -71,11 +71,6 @@ def extract_song_data(files):
                         except Exception as e:
                             print(e)
 
-
-
-
-        # combine into song df
-        # song = pd.concat([meta, analysis], axis=1, sort=False)
         # Append to main df
         allsongs = allsongs.append(data, ignore_index=True)
         # Close store for reading
@@ -86,12 +81,31 @@ def extract_song_data(files):
 
 # Takes a dataframe full of encoded strings and cleans it
 def convert_byte_data(df):
-    str_df = df.select_dtypes([np.object])
+
+    obj_df = df.select_dtypes([np.object])
+
+    # HARDCODE COLUMNS HERE, NOT PICKING THEM ALL UP
+    str_cols = []
+    np_str_cols = []
+    for col in set(obj_df):
+        if isinstance(obj_df[col][0], bytes):
+            str_cols.append(col)
+        elif str(obj_df.metadata_artist_terms[0].dtype)[1]:
+            # HANDLE NUMPY ARRAY DECODING HERE
+            col.astype('U')
+            np_str_cols.append(col)
+
+    str_df = obj_df[str_cols]
     str_df = str_df.stack().str.decode('utf-8').unstack()
     for col in str_df:
         df[col] = str_df[col]
 
     return df
+
+
+def categorize_string_data(df):
+
+
 
 
 # MAIN
@@ -103,6 +117,7 @@ t2 = time.time()
 
 dev_set = files[:50]
 songsDF = extract_song_data(dev_set)
+# songsDF = extract_song_data(files)
 t3 = time.time()
 
 print('\nGot', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
