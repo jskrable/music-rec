@@ -115,20 +115,34 @@ def get_user_taste_data(filename):
     tasteDF = pd.read_csv('./TasteProfile/train_triplets_SAMPLE.txt', sep='\t', header=None, names={'user,song,count'})
 
 
+def set_target(df):
+
+    # Compare output of NN artist to this list of artists
+    rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
+    relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
+    artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
+    relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
+
+
 # MAIN
 ###############################################################################
 
-t1 = time.time()
+t_start = time.time()
 files = get_all_files('./MillionSongSubset/data', '.h5')
-t2 = time.time()
 
-dev_set = files[:50]
-songsDF = extract_song_data(dev_set)
-# songsDF = extract_song_data(files)
-t3 = time.time()
+# dev_set = files[:50]
+# songsDF = extract_song_data(dev_set)
+songsDF = extract_song_data(files)
+t_extract = time.time()
+print('\nGot', len(songsDF.index), 'songs in', round((t_extract-t_start), 2), 'seconds.')
 
-print('\nGot', len(songsDF.index), 'songs in', round((t3-t1), 2), 'seconds.')
+print('Pre-processing extracted song data...')
 songsDF = convert_byte_data(songsDF)
+t_preproc = time.time()
+print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_extract), 2), 'seconds.')
+
+
+
 
 # print('Storing compiled song dataframe in HDF5...')
 # songsDF.to_hdf('preprocessing/songs.h5', 'songs')
