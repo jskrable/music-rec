@@ -108,9 +108,11 @@ def convert_byte_data(df):
     return df
 
 
-def categorize_string_data(df):
+# def categorize_string_data(df):
+#     None
 
-
+def get_user_taste_data(filename):
+    tasteDF = pd.read_csv('./TasteProfile/train_triplets_SAMPLE.txt', sep='\t', header=None, names={'user,song,count'})
 
 
 # MAIN
