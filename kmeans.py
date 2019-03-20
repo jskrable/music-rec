@@ -39,11 +39,7 @@ previous_centers = None
 for i in range(iterations):
     kmeans.train(input_fn)
     cluster_centers = kmeans.cluster_centers()
-    # if previous_centers is not None:
-    #   print('delta:', cluster_centers - previous_centers)
     previous_centers = cluster_centers
-    # print('score:', kmeans.score(input_fn))
-# print('cluster centers:', cluster_centers)
 
 # map the input points to their clusters
 cluster_indices = list(kmeans.predict_cluster_index(input_fn))
@@ -53,6 +49,7 @@ for i, point in enumerate(DATA):
     print('point:', i, 'is in cluster', cluster_index)
 
 
+# USE THIS ONE FOR SECTION 2.4 OF DESIGN DOC
 # Template from https://github.com/serengil/tensorflow-101/
 # blob/master/python/KMeansClustering.py
 ###########################################################
@@ -62,28 +59,29 @@ col = len(DATA[0])
 
 print("[", row, "x", col, "] sized input")
 
+# Initialize model. Can use cosine distance here as well 
 model = tf.contrib.learn.KMeansClustering(
-    # SQUARED_EUCLIDEAN_DISTANCE, COSINE_DISTANCE
     CLUSTERS, distance_metric=clustering_ops.SQUARED_EUCLIDEAN_DISTANCE,
     initial_clusters=tf.contrib.learn.KMeansClustering.RANDOM_INIT
 )
 
 
+# Convert incoming data to tensors
 def train_input_fn():
     data = tf.constant(DATA, tf.float32)
     return (data, None)
 
+# Function to return a classification for data after model is done
+def predict_input_fn():
+    return np.array(DATA, np.float32)
 
+# Fit k-means model to input data
 model.fit(input_fn=train_input_fn, steps=EPOCHS)
 
 print("--------------------")
 print("kmeans model: ", model)
 
-
-def predict_input_fn():
-    return np.array(DATA, np.float32)
-
-
+# Get classified predictions for input data
 predictions = model.predict(input_fn=predict_input_fn, as_iterable=True)
 
 index = 0

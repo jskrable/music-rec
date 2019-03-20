@@ -84,7 +84,6 @@ def convert_byte_data(df):
 
     obj_df = df.select_dtypes([np.object])
 
-    # HARDCODE COLUMNS HERE, NOT PICKING THEM ALL UP
     str_cols = []
     np_str_cols = []
     for col in set(obj_df):
@@ -124,15 +123,31 @@ def set_target(df):
     relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
 
 
+def proc_array_col(row, max_col):
+
+
+    sample = np.ceil(row.flatten().shape[0]/30).astype(int)
+    return np.pad(row.flatten(), max_col, 'constant')
+
+    # np.ceil(row.flatten().shape[0])
+    # # Slice array to get a constant length by sampling every n values based on length
+    # songsDF.col.apply(lambda x: x.flatten()[1::int(x.flatten().shape[0]/30)])
+
+
+def max_val_in_col(col):
+
+    measurer = np.vectorize(len)
+    measurer(col).max(axis=0) 
+
 # MAIN
 ###############################################################################
 
 t_start = time.time()
 files = get_all_files('./MillionSongSubset/data', '.h5')
 
-# dev_set = files[:50]
-# songsDF = extract_song_data(dev_set)
-songsDF = extract_song_data(files)
+dev_set = files[:200]
+songsDF = extract_song_data(dev_set)
+# songsDF = extract_song_data(files)
 t_extract = time.time()
 print('\nGot', len(songsDF.index), 'songs in', round((t_extract-t_start), 2), 'seconds.')
 
