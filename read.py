@@ -13,6 +13,7 @@ import glob
 import time
 import pandas as pd
 import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
 # from pandas import DataFrame, HDFStore
 
 
@@ -116,28 +117,57 @@ def get_user_taste_data(filename):
 
 def set_target(df):
 
-    # Compare output of NN artist to this list of artists
+    # Create smaller df with columns that will be used for comparison after the NN
     rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
-    relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
-    artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
+    relatedDF = df[rel_cols]
+    # Apply cleaning function to extract byte data into long strings
+    relatedDF['metadata_similar_artists'] = relatedDF.metadata_similar_artists.apply(arr_to_str)
+
+    # Get  value matrix for training or testing
+    y = bag_of_words(relatedDF, metadata_similar_artists)
+    
+
+    # artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
     relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
+    np.array_str(x[0].astype(str)).replace('\n','').replace("'","")[1:-1]
 
+SAMPLE_SIZE = 30
 
-def proc_array_col(row, max_col):
+# def proc_array_col(row, max_col):
+def proc_array_col(row):
 
-
-    sample = np.ceil(row.flatten().shape[0]/30).astype(int)
-    return np.pad(row.flatten(), max_col, 'constant')
+    sample = np.ceil(row.flatten().shape[0]/SAMPLE_SIZE).astype(int)
+    # return np.pad(row.flatten(), max_col, 'constant')
 
     # np.ceil(row.flatten().shape[0])
-    # # Slice array to get a constant length by sampling every n values based on length
+    # Slice array to get a constant length by sampling every n values based on length
     # songsDF.col.apply(lambda x: x.flatten()[1::int(x.flatten().shape[0]/30)])
+    return row.flatten()[0::sample]
 
 
 def max_val_in_col(col):
 
     measurer = np.vectorize(len)
     measurer(col).max(axis=0) 
+
+
+# Function to transform long string fields into numerical data
+def bag_of_words(data, col):
+
+    corpus = data[col].values
+    vectorizer = CountVectorizer()
+    x = vectorizer.fit_transform(corpus)
+    # data[col] = x.toarray()
+
+    return x.toarray()
+
+
+# Function that takes a numpy array of strings and transforms into one long string for
+# bag of words processing
+def np_to_str(row):
+    return np.array_str(row.astype(str)).replace('\n','').replace("'","")[1:-1]
+
+
 
 # MAIN
 ###############################################################################
@@ -156,7 +186,8 @@ songsDF = convert_byte_data(songsDF)
 t_preproc = time.time()
 print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_extract), 2), 'seconds.')
 
-
+# Gets numpy style columns and processes into standard size matrix
+x = songsDF.select_dtypes([np.object]).apply(proc_array_col)
 
 
 # print('Storing compiled song dataframe in HDF5...')
