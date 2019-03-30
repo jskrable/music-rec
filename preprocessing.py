@@ -103,6 +103,7 @@ def vectorize(data, label):
 
     output = np.zeros(shape=(len(data),0))
 
+    # TODO Solve for all caught exceptions
     for col in data:
         try:
             if col == label:
