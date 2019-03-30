@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 
-# Progress bar for cli
+# Progress bar for cligit s
 def progress(count, total, suffix=''):
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
@@ -83,10 +83,12 @@ def get_user_taste_data(filename):
     return tasteDF
 
 
+# Function to read all h5 files in a directory into a dataframe
 def h5_to_df(basedir, limit=None):
-
     files = get_all_files(basedir, '.h5')
     files = files if limit is None else files[:limit]
     df = extract_song_data(files)
+    # DEV columns. Drop this line to use the entire dataset. Be sure to get some extra memory
+    df = df[['metadata_songs_artist_id','metadata_songs_artist_name','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_track_id','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_songs_tempo','metadata_similar_artists']]
 
     return df

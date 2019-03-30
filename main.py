@@ -29,10 +29,7 @@ songsDF = pp.convert_byte_data(songsDF)
 t_preproc = time.time()
 print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_extract), 2), 'seconds.')
 
-songsDF = songsDF[['metadata_songs_artist_id','metadata_songs_artist_name','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_track_id','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_songs_tempo','metadata_similar_artists']]
-
-# np.hstack((numpy arrays of values))
-
+x, y = pp.vectorize(songsDF, 'metadata_similar_artists')
 # print('Storing compiled song dataframe in HDF5...')
 # songsDF.to_hdf('preprocessing/songs.h5', 'songs')
 # print(songsDF)

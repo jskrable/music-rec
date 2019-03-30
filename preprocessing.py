@@ -48,15 +48,34 @@ def set_target(df):
     relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
 
 
-def proc_number_array_col(row, max_col):
+def sample_array(row, dim):
+
+    if dim > 1:
+        sample = np.ceil(row.flatten().shape[0]/30).astype(int)
+        z = []
+        for i,r in enumerate(row):
+            if (i % sample) == 0:
+                z.append(r)
+        return np.concatenate(z)
+
+    if dim == 1:
+
+        row = row.astype(np.float)
+        sample = np.ceil(row.shape[0]/30).astype(int)
+        z = []
+        for i,r in enumerate(row):
+            if (i % sample) == 0:
+                z.append(r)
+        return np.array(z)
 
 
-    sample = np.ceil(row.flatten().shape[0]/30).astype(int)
-    return np.pad(row.flatten(), max_col, 'constant')
+def process_audio(col):
 
-    # np.ceil(row.flatten().shape[0])
-    # # Slice array to get a constant length by sampling every n values based on length
-    # songsDF.col.apply(lambda x: x.flatten()[1::int(x.flatten().shape[0]/30)])
+    # hanlde multidimensional here?
+
+    col = col.apply(sample_array, len(col.shape))
+    xx = np.stack(col.values)
+    return xx
 
 
 def max_val_in_col(col):
@@ -69,24 +88,37 @@ def max_val_in_col(col):
 def bag_of_words(corpus):
     vectorizer = CountVectorizer()
     x = vectorizer.fit_transform(corpus)
-
     return x.toarray()
 
 
 # Function to vectorize a column made up of numpy arrays containing strings
-def proc_str_array_col(col):
+def process_metadata_list(col):
     col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
-    col = bag_of_words(col.values)
-    return col
+    xx = bag_of_words(col.values)
+    return xx
 
 
-def vectorize(data):
+# Function to vectorize full dataframe 
+def vectorize(data, label):
+
+    output = np.zeros(shape=(len(data),0))
 
     for col in data:
+        try:
+            if col == label:
+                y = process_metadata_list(data[col])
 
-        if str(type(data[col].iloc[0])) == "<class 'str'>":
-            pd.get_dummies(data[col]).values
-        elif str(type(data[col].iloc[0])) == "<class 'numpy.ndarray'>":
-            proc_str_array_col(data[col])
-        else:
-            proc_number_array_col()
+            elif data[col].dtype == 'O':
+                if str(type(data[col].iloc[0])) == "<class 'str'>":
+                    xx = pd.get_dummies(data[col]).values
+                elif col.split('_')[0] == 'metadata':
+                    xx = process_metadata_list(data[col])
+                else: 
+                    # MORE CONDITIONS HERE 
+                    xx = process_audio(data[col])
+
+            output = np.hstack((output, xx))
+        except Exception as e:
+            print(col)
+            print(e)
+    return output, y
