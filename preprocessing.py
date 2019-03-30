@@ -38,14 +38,17 @@ def sample_ndarray(row):
     for i,r in enumerate(row):
         if (i % sample) == 0:
             z.append(normalize_array(r,1))
+    print(len(z))
     return np.concatenate(z)
 
 
+# TODO work on this, need to standardize size better
 def sample_flat_array(row, size):
     row = row.astype(np.float)
+    # THIS IS WRONG 
     sample = np.ceil(size/3).astype(int)
     z = []
-    row = normalize_array(r, 1)
+    row = normalize_array(row, 1)
     for i,r in enumerate(row):
         if (i % sample) == 0:
             z.append(r)
@@ -56,10 +59,12 @@ def process_audio(col):
     # hanlde multidimensional here?
     dim = len(col.iloc[0].shape)
     size = max_length(col)
+
     if dim > 1:
         col = col.apply(sample_ndarray)
     else:
-        col = col.apply(sample_flat_array, size)
+        # print(size)
+        col = col.apply(lambda x: sample_flat_array(x, size))
 
     xx = np.stack(col.values)
     return xx
