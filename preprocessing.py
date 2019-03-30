@@ -10,6 +10,67 @@ import re
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import normalize
+
+
+def normalize_array(arr, scale):
+    arr = arr.astype(np.float)
+    arr *= (scale / np.abs(arr).max())
+    return arr
+
+
+def max_length(col):
+    measurer = np.vectorize(len)
+    return measurer(col).max(axis=0) 
+
+
+# Function to transform string fields into numerical data
+def bag_of_words(corpus):
+    vectorizer = CountVectorizer()
+    x = vectorizer.fit_transform(corpus)
+    return x.toarray()
+
+
+def sample_ndarray(row):
+    SAMPLE_SIZE = 30
+    sample = np.ceil(row.flatten().shape[0]/SAMPLE_SIZE).astype(int)
+    z = []
+    for i,r in enumerate(row):
+        if (i % sample) == 0:
+            z.append(normalize_array(r,1))
+    return np.concatenate(z)
+
+
+def sample_flat_array(row, size):
+    row = row.astype(np.float)
+    sample = np.ceil(size/3).astype(int)
+    z = []
+    row = normalize_array(r, 1)
+    for i,r in enumerate(row):
+        if (i % sample) == 0:
+            z.append(r)
+    return np.array(z)
+
+
+def process_audio(col):
+    # hanlde multidimensional here?
+    dim = len(col.iloc[0].shape)
+    size = max_length(col)
+    if dim > 1:
+        col = col.apply(sample_ndarray)
+    else:
+        col = col.apply(sample_flat_array, size)
+
+    xx = np.stack(col.values)
+    return xx
+
+
+# Function to vectorize a column made up of numpy arrays containing strings
+def process_metadata_list(col):
+    col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
+    xx = bag_of_words(col.values)
+    return xx
+
 
 # Takes a dataframe full of encoded strings and cleans it
 def convert_byte_data(df):
@@ -39,65 +100,6 @@ def convert_byte_data(df):
     return df
 
 
-def set_target(df):
-
-    # Compare output of NN artist to this list of artists
-    rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
-    relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
-    artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
-    relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
-
-
-def sample_array(row, dim):
-
-    if dim > 1:
-        sample = np.ceil(row.flatten().shape[0]/30).astype(int)
-        z = []
-        for i,r in enumerate(row):
-            if (i % sample) == 0:
-                z.append(r)
-        return np.concatenate(z)
-
-    if dim == 1:
-
-        row = row.astype(np.float)
-        sample = np.ceil(row.shape[0]/30).astype(int)
-        z = []
-        for i,r in enumerate(row):
-            if (i % sample) == 0:
-                z.append(r)
-        return np.array(z)
-
-
-def process_audio(col):
-
-    # hanlde multidimensional here?
-
-    col = col.apply(sample_array, len(col.shape))
-    xx = np.stack(col.values)
-    return xx
-
-
-def max_val_in_col(col):
-
-    measurer = np.vectorize(len)
-    measurer(col).max(axis=0) 
-
-
-# Function to transform string fields into numerical data
-def bag_of_words(corpus):
-    vectorizer = CountVectorizer()
-    x = vectorizer.fit_transform(corpus)
-    return x.toarray()
-
-
-# Function to vectorize a column made up of numpy arrays containing strings
-def process_metadata_list(col):
-    col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
-    xx = bag_of_words(col.values)
-    return xx
-
-
 # Function to vectorize full dataframe 
 def vectorize(data, label):
 
@@ -123,3 +125,11 @@ def vectorize(data, label):
             print(col)
             print(e)
     return output, y
+
+
+def set_target(df):
+    # Compare output of NN artist to this list of artists
+    rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
+    relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
+    artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
+    relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)

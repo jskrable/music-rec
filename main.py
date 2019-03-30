@@ -17,15 +17,13 @@ import preprocessing as pp
 
 
 t_start = time.time()
-songsDF = read.h5_to_df('./MillionSongSubset/data', 200)
+songsDF = read.h5_to_df('./data/MillionSongSubset/data', 200)
 t_extract = time.time()
 print('\nGot', len(songsDF.index), 'songs in', round((t_extract-t_start), 2), 'seconds.')
 
 print('Pre-processing extracted song data...')
-t_preproc = time.time()
 songsDF = pp.convert_byte_data(songsDF)
 x, y = pp.vectorize(songsDF, 'metadata_similar_artists')
+t_preproc = time.time()
 print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_extract), 2), 'seconds.')
-
-
 
