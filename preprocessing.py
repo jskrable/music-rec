@@ -28,6 +28,9 @@ def max_length(col):
 def bag_of_words(corpus):
     vectorizer = CountVectorizer()
     x = vectorizer.fit_transform(corpus)
+
+    # NEED TO RETURN MAPPING FOR Y ALSO
+    # vectorizer.inverse_transform(x)
     return x.toarray()
 
 
@@ -38,32 +41,25 @@ def sample_ndarray(row):
     for i,r in enumerate(row):
         if (i % sample) == 0:
             z.append(normalize_array(r,1))
-    print(len(z))
     return np.concatenate(z)
 
 
 # TODO work on this, need to standardize size better
 def sample_flat_array(row, size):
     row = row.astype(np.float)
-    # THIS IS WRONG 
-    sample = np.ceil(size/3).astype(int)
-    z = []
-    row = normalize_array(row, 1)
-    for i,r in enumerate(row):
-        if (i % sample) == 0:
-            z.append(r)
-    return np.array(z)
+    # Pad shorter arrays with zeros to the max length
+    # Maybe change to pad to mean length???
+    z = np.asarray(np.pad(row, (0, size - row.shape[0]), 'constant'))
+    return z
 
 
 def process_audio(col):
-    # hanlde multidimensional here?
     dim = len(col.iloc[0].shape)
     size = max_length(col)
 
     if dim > 1:
         col = col.apply(sample_ndarray)
     else:
-        # print(size)
         col = col.apply(lambda x: sample_flat_array(x, size))
 
     xx = np.stack(col.values)
@@ -138,3 +134,4 @@ def set_target(df):
     relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
     artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
     relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
+
