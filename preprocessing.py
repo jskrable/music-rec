@@ -107,6 +107,7 @@ def vectorize(data, label):
     output = np.zeros(shape=(len(data),0))
 
     # TODO Solve for all caught exceptions
+    # DONE, can probably drop the try-catch
     for col in data:
         try:
             if col == label:
@@ -125,7 +126,34 @@ def vectorize(data, label):
         except Exception as e:
             print(col)
             print(e)
+
     return output, y
+
+
+
+# Function to compare model input and output
+# MOVE TO A NEW MODULE????
+def target_vocab(data, col, y):
+
+    # Init count vectorizer
+    vec = CountVectorizer()
+    vec.fit_transform(data[col].values)
+
+    # Create the lookup list ordered correctly by index
+    terms = np.array(list(vec.vocabulary_.keys()))
+    indices = np.array(list(vec.vocabulary_.values()))
+    inverse_vocabulary = terms[np.argsort(indices)]
+
+    # Get input data and output data
+    # TODO vectorize this, too slow
+    for i, v in data[col].iteritems():
+        source = np.sort(np.char.lower(v))
+        pred = np.sort(np.array([inverse_vocabulary[i] for i, v in enumerate(y[i]) if v == 1]))
+        # Get intersection of arrays
+        matching = np.intersect1d(source, pred)
+
+        print(matching.shape[0])
+
 
 
 def set_target(df):
