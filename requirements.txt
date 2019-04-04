@@ -1,8 +1,11 @@
+# requirements.txt
+# Used latest versions from 4/4/19 4:06pm on System Name IST-APP-WL-0160
+
 numpy >= 1.16.2
 pandas >= 0.24.0
 tables >= 3.5.1
 sklearn
-scikit-learn ?= 0.20.2
+scikit-learn >= 0.20.2
 scipy >= 1.2.1
 matplotlib >= 3.0.2
 keras >= 2.2.4
