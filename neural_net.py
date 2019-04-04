@@ -18,16 +18,14 @@ def simple_nn(x, y):
     model.add(Dense(12, activation='relu', input_shape=(x.shape[1],)))
 
     # Add hidden layer s
-    model.add(Dense(int(x.shape[1]*1.5), activation='relu'))
-    model.add(Dense(x.shape[1], activation='relu'))
-    model.add(Dense(int(x.shape[1]*0.5), activation='relu'))
-    model.add(Dense(100, activation='relu'))
+    model.add(Dense(int(x.shape[1]/2), activation='relu'))
+    model.add(Dense(int(x.shape[1]/4), activation='relu'))
 
     # Add an output layer 
-    model.add(Dense(y.shape[1], activation='sigmoid'))
+    model.add(Dense(y.shape[1], activation='softmax'))
 
 
-    model.compile(loss='mean_squared_error',
+    model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy'])
                        

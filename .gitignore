@@ -51,5 +51,4 @@ __pycache__/
 # Credentials #
 ###############
 creds.json
-
-# Data
+keys/*
