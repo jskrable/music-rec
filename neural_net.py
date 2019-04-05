@@ -8,6 +8,7 @@ jack skrable
 
 import tensorflow as tf
 import numpy as np
+import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.layers import MaxPooling3D
@@ -22,8 +23,8 @@ def simple_nn(X, y):
 
     # Add hidden layer s
     model.add(Dense(X.shape[1], activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(int(X.shape[1]/2), activation='relu'))
+    # model.add(Dropout(0.5))
+    # model.add(Dense(int(X.shape[1]/2), activation='relu'))
     # model.add(Dense(int(X.shape[1]/4), activation='relu'))
     # model.add(Dropout(0.5))
 
@@ -33,12 +34,13 @@ def simple_nn(X, y):
     model.add(Dense(y.shape[0], activation='softmax'))
 
     # Sotchastic gradient descent
-    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(loss='categorical_crossentropy',
-                  optimizer=sgd,
+                  optimizer='adam',
                   metrics=['accuracy'])
                        
-    model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=100, steps_per_epoch=128, verbose=1)
+    y = keras.utils.to_categorical(y, num_classes=y.shape[0])
+    model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=100, steps_per_epoch=64, verbose=1)
     # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     # y_pred = model.predict(X_test)
