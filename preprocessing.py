@@ -73,6 +73,13 @@ def process_metadata_list(col):
     return xx
 
 
+# Simplify target to one artist
+def categorical(col):
+    col = col.apply(lambda x: x[0])
+    y_map, y = np.unique(col.values, return_inverse=True)
+    return y_map, y
+
+
 # Takes a dataframe full of encoded strings and cleans it
 def convert_byte_data(df):
 
@@ -111,7 +118,7 @@ def vectorize(data, label):
     for col in data:
         try:
             if col == label:
-                y = process_metadata_list(data[col])
+                y_map, y = categorical(data[col])
 
             elif data[col].dtype == 'O':
                 if str(type(data[col].iloc[0])) == "<class 'str'>":
