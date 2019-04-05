@@ -18,7 +18,7 @@ import neural_net as nn
 
 
 t_start = time.time()
-songsDF = read.h5_to_df('./data/MillionSongSubset/data', 1000)
+songsDF = read.h5_to_df('./data/MillionSongSubset/data', 200)
 t_extract = time.time()
 print('\nGot', len(songsDF.index), 'songs in', round((t_extract-t_start), 2), 'seconds.')
 
@@ -26,12 +26,13 @@ print('Pre-processing extracted song data...')
 songsDF = pp.convert_byte_data(songsDF)
 # Take first 10 related artists instead of 100
 songsDF['metadata_similar_artists'] = songsDF.metadata_similar_artists.apply(lambda x: x[:10])
-x, y = pp.vectorize(songsDF, 'metadata_similar_artists')
+X, y = pp.vectorize(songsDF, 'metadata_similar_artists')
 t_preproc = time.time()
 print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_extract), 2), 'seconds.')
 
 
 print('Training neural network...')
-nn.simple_nn(x, y)
+nn.simple_nn(X, y)
+# nn.deep_nn(X, y)
 t_nn = time.time()
 print('Neural network trained in',round((t_nn - t_preproc), 2), 'seconds.')

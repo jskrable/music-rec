@@ -14,7 +14,7 @@ from sklearn.preprocessing import normalize
 
 
 def normalize_array(arr, scale):
-    arr = arr.astype(np.float)
+    arr = arr.astype(np.float32)
     arr *= (scale / np.abs(arr).max())
     return arr
 
@@ -50,7 +50,7 @@ def sample_flat_array(row, size):
     # Pad shorter arrays with zeros to the max length
     # Maybe change to pad to mean length???
     z = np.asarray(np.pad(row, (0, size - row.shape[0]), 'constant'))
-    return z
+    return normalize_array(z, 1)
 
 
 def process_audio(col):
