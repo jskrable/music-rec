@@ -10,13 +10,14 @@ import re
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import normalize
+# from sklearn.preprocessing import normalize
+from sklearn.preprocessing import MinMaxScaler
 
 
-def normalize_array(arr, scale):
-    arr = arr.astype(np.float32)
-    arr *= (scale / np.abs(arr).max())
-    return arr
+# def normalize_array(arr, scale):
+#     arr = arr.astype(np.float32)
+#     arr *= (scale / np.abs(arr).max())
+#     return arr
 
 
 def max_length(col):
@@ -40,7 +41,7 @@ def sample_ndarray(row):
     z = []
     for i,r in enumerate(row):
         if (i % sample) == 0:
-            z.append(normalize_array(r,1))
+            z.append(r)
     return np.concatenate(z)
 
 
@@ -50,7 +51,7 @@ def sample_flat_array(row, size):
     # Pad shorter arrays with zeros to the max length
     # Maybe change to pad to mean length???
     z = np.asarray(np.pad(row, (0, size - row.shape[0]), 'constant'))
-    return normalize_array(z, 1)
+    return z
 
 
 def process_audio(col):
@@ -78,6 +79,11 @@ def categorical(col):
     col = col.apply(lambda x: x[0])
     y_map, y = np.unique(col.values, return_inverse=True)
     return y_map, y
+
+
+def scaler(X, range):
+    mms = MinMaxScaler()
+    return mms.fit_transform(X)
 
 
 # Takes a dataframe full of encoded strings and cleans it
@@ -120,6 +126,8 @@ def vectorize(data, label):
             if col == label:
                 y_map, y = categorical(data[col])
 
+            # TODO 
+            # No 1.0s here?????
             elif data[col].dtype == 'O':
                 if str(type(data[col].iloc[0])) == "<class 'str'>":
                     xx = pd.get_dummies(data[col]).values
@@ -133,6 +141,8 @@ def vectorize(data, label):
         except Exception as e:
             print(col)
             print(e)
+
+    output = scaler(output, 1)
 
     return output, y
 

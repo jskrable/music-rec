@@ -23,8 +23,8 @@ def simple_nn(X, y):
 
     # Add hidden layer s
     model.add(Dense(X.shape[1], activation='relu'))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(int(X.shape[1]/2), activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(int(X.shape[1]/2), activation='relu'))
     # model.add(Dense(int(X.shape[1]/4), activation='relu'))
     # model.add(Dropout(0.5))
 
@@ -40,8 +40,8 @@ def simple_nn(X, y):
                   metrics=['accuracy'])
                        
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])
-    model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=100, steps_per_epoch=64, verbose=1)
-    # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
+    # model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=100, steps_per_epoch=64, verbose=1)
+    model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     # y_pred = model.predict(X_test)
 
