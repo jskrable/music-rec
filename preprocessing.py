@@ -24,6 +24,10 @@ def max_length(col):
     measurer = np.vectorize(len)
     return measurer(col).max(axis=0) 
 
+def min_length(col):
+    measurer = np.vectorize(len)
+    return measurer(col).min(axis=0) 
+
 
 # Function to transform string fields into numerical data
 def bag_of_words(corpus):
@@ -42,41 +46,62 @@ def sample_ndarray(row):
     for i,r in enumerate(row):
         if (i % sample) == 0:
             z.append(r)
-    return np.concatenate(z)
+    return np.concatenate(z).astype(np.float)
 
 
-# TODO work on this, need to standardize size better
-def sample_flat_array(row, size):
-    row = row.astype(np.float)
-    # Pad shorter arrays with zeros to the max length
-    # Maybe change to pad to mean length???
-    z = np.asarray(np.pad(row, (0, size - row.shape[0]), 'constant'))
-    return z
+def sample_flat_array(row):
+    SAMPLE_SIZE = 28
+    if row.shape[0] <= SAMPLE_SIZE:
+        s = 1
+    else:
+        s = row.shape[0] // SAMPLE_SIZE
+
+    x = [r for i, r in enumerate(row) if i % s == 0]
+
+    if len(x) > SAMPLE_SIZE:
+        mid = len(x) // 2
+        x = x[int(mid-(SAMPLE_SIZE/2)):int(mid+(SAMPLE_SIZE/2))]
+    else:
+        x = np.pad(x, (0, SAMPLE_SIZE - len(x)), 'constant')
+    
+    return np.array(x).astype(np.float)
 
 
 def process_audio(col):
     dim = len(col.iloc[0].shape)
-    size = max_length(col)
+    # size = max_length(col)
 
     if dim > 1:
         col = col.apply(sample_ndarray)
     else:
-        col = col.apply(lambda x: sample_flat_array(x, size))
+        col = col.apply(sample_flat_array)
 
     xx = np.stack(col.values)
     return xx
 
 
+def lookup_discrete_id(row, m):
+    _, row, _ = np.intersect1d(m, row, assume_unique=True, return_indices=True)
+    return row
+
+
 # Function to vectorize a column made up of numpy arrays containing strings
 def process_metadata_list(col):
-    col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
-    xx = bag_of_words(col.values)
+    x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
+    # col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
+    col = col.apply(lambda x: lookup_discrete_id(x, x_map))
+    max_len = max_length(col)
+    col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
+    xx = np.stack(col.values)
     return xx
 
 
-# Simplify target to one artist
+# Function to translate target artist list into discrete integer ids
 def categorical(col):
+    # Simplify to one artist
     col = col.apply(lambda x: x[0])
+    # Get all unique values, unpack into a map
+    # TODO reassign these to the right row
     y_map, y = np.unique(col.values, return_inverse=True)
     return y_map, y
 
@@ -119,23 +144,25 @@ def vectorize(data, label):
 
     output = np.zeros(shape=(len(data),0))
 
-    # TODO Solve for all caught exceptions
-    # DONE, can probably drop the try-catch
     for col in data:
         try:
             if col == label:
                 y_map, y = categorical(data[col])
 
-            # TODO 
-            # No 1.0s here?????
             elif data[col].dtype == 'O':
                 if str(type(data[col].iloc[0])) == "<class 'str'>":
+                    print('case 1',col)
                     xx = pd.get_dummies(data[col]).values
                 elif col.split('_')[0] == 'metadata':
+                    print('case 2',col)
                     xx = process_metadata_list(data[col])
-                else: 
-                    # MORE CONDITIONS HERE 
+                else:
+                    print('case 3',col)
                     xx = process_audio(data[col])
+
+            else:
+                print('case 4', col)
+                xx = data[col].values[...,None]
 
             output = np.hstack((output, xx))
         except Exception as e:

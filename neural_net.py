@@ -6,15 +6,23 @@ neural_net.py
 jack skrable
 """
 
+import time
+import datetime
 import tensorflow as tf
 import numpy as np
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.layers import MaxPooling3D
-from keras.optimizers import SGD
+from keras import optimizers 
 
 def simple_nn(X, y):
+
+    # Globals
+    lr = 0.001
+    OPT = 'sgd'
+
+
     # Initialize the constructor
     model = Sequential()
 
@@ -23,9 +31,9 @@ def simple_nn(X, y):
 
     # Add hidden layer s
     model.add(Dense(X.shape[1], activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.35))
     model.add(Dense(int(X.shape[1]/2), activation='relu'))
-    # model.add(Dense(int(X.shape[1]/4), activation='relu'))
+    model.add(Dense(int(X.shape[1]/4), activation='relu'))
     # model.add(Dropout(0.5))
 
     # model.add(MaxPooling3D(5, activation='sigmoid'))
@@ -33,21 +41,28 @@ def simple_nn(X, y):
     # Add an output layer 
     model.add(Dense(y.shape[0], activation='softmax'))
 
-    # Sotchastic gradient descent
-    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+    if OPT == 'sgd':
+        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
+    elif OPT == 'adam':
+        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=opt,
                   metrics=['accuracy'])
                        
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])
-    # model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=100, steps_per_epoch=64, verbose=1)
-    model.fit(X, y, epochs=20, batch_size=10, verbose=1)
+    model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=20, steps_per_epoch=64, verbose=1)
+    # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     # y_pred = model.predict(X_test)
 
     # score = model.evaluate(X_test, y_test,verbose=1)
 
     # print(score)
+
+    t = time.time()
+    dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
+    path = './model/train/'
+    model.save(str(path+OPT+'_'+dt+'.h5'))
 
 
 def deep_nn(X,y):

@@ -18,7 +18,7 @@ import neural_net as nn
 
 
 t_start = time.time()
-songsDF = read.h5_to_df('./data/MillionSongSubset/data', 250)
+songsDF = read.h5_to_df('./data/MillionSongSubset/data', 1200)
 t_extract = time.time()
 print('\nGot', len(songsDF.index), 'songs in', round((t_extract-t_start), 2), 'seconds.')
 
@@ -32,7 +32,7 @@ print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_
 
 
 print('Training neural network...')
-nn.simple_nn(X, y)
+model = nn.simple_nn(X, y)
 # nn.deep_nn(X, y)
 t_nn = time.time()
 print('Neural network trained in',round((t_nn - t_preproc), 2), 'seconds.')
