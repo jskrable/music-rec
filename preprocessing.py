@@ -114,6 +114,7 @@ def scaler(X, range):
 # Takes a dataframe full of encoded strings and cleans it
 def convert_byte_data(df):
 
+    print('Cleaning byte data...')
     obj_df = df.select_dtypes([np.object])
 
     str_cols = []
@@ -142,6 +143,7 @@ def convert_byte_data(df):
 # Function to vectorize full dataframe 
 def vectorize(data, label):
 
+    print('Vectorizing dataframe...')
     output = np.zeros(shape=(len(data),0))
 
     for col in data:
@@ -151,17 +153,17 @@ def vectorize(data, label):
 
             elif data[col].dtype == 'O':
                 if str(type(data[col].iloc[0])) == "<class 'str'>":
-                    print('case 1',col)
+                    # print('case 1',col)
                     xx = pd.get_dummies(data[col]).values
                 elif col.split('_')[0] == 'metadata':
-                    print('case 2',col)
+                    # print('case 2',col)
                     xx = process_metadata_list(data[col])
                 else:
-                    print('case 3',col)
+                    # print('case 3',col)
                     xx = process_audio(data[col])
 
             else:
-                print('case 4', col)
+                # print('case 4', col)
                 xx = data[col].values[...,None]
 
             output = np.hstack((output, xx))

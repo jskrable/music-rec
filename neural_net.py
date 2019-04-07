@@ -19,27 +19,35 @@ from keras import optimizers
 def simple_nn(X, y):
 
     # Globals
-    lr = 0.001
+    # Lower the learning rate when using adam
+    lr = 0.01
     OPT = 'sgd'
 
+    y = keras.utils.to_categorical(y, num_classes=y.shape[0])
+
+    print('Splitting to train, test, and validation sets...')
+    X_train, X_test, X_valid = np.split(X, [int(.8 * len(X)), int(.9 * len(X))])
+    y_train, y_test, y_valid = np.split(y, [int(.8 * len(y)), int(.9 * len(y))])
+    in_size = X_train.shape[1]
+    out_size = y.shape[0]
 
     # Initialize the constructor
     model = Sequential()
 
     # Add an input layer 
-    model.add(Dense(12, activation='relu', input_shape=(X.shape[1],)))
+    model.add(Dense(12, activation='relu', input_shape=(in_size,)))
 
     # Add hidden layer s
-    model.add(Dense(X.shape[1], activation='relu'))
-    model.add(Dropout(0.35))
-    model.add(Dense(int(X.shape[1]/2), activation='relu'))
-    model.add(Dense(int(X.shape[1]/4), activation='relu'))
+    model.add(Dense(in_size, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(int(in_size/2), activation='relu'))
+    model.add(Dense(int(in_size/4), activation='relu'))
     # model.add(Dropout(0.5))
 
     # model.add(MaxPooling3D(5, activation='sigmoid'))
 
     # Add an output layer 
-    model.add(Dense(y.shape[0], activation='softmax'))
+    model.add(Dense(out_size, activation='softmax'))
 
     if OPT == 'sgd':
         opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
@@ -49,16 +57,19 @@ def simple_nn(X, y):
                   optimizer=opt,
                   metrics=['accuracy'])
                        
-    y = keras.utils.to_categorical(y, num_classes=y.shape[0])
-    model.fit(tf.convert_to_tensor(X), tf.convert_to_tensor(y), epochs=20, steps_per_epoch=64, verbose=1)
+
+    print('Training...')    
+    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), epochs=50, steps_per_epoch=64, verbose=1)
     # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
-    # y_pred = model.predict(X_test)
+    print('EValuating...')
+    y_pred = model.predict(X_test)
 
-    # score = model.evaluate(X_test, y_test,verbose=1)
+    score = model.evaluate(X_test, y_test,verbose=1)
 
-    # print(score)
+    print(score)
 
+    print('Saving model...')
     t = time.time()
     dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
     path = './model/train/'
@@ -78,7 +89,7 @@ def deep_nn(X,y):
             X_batch, y_batch = X[batch_idx], y[batch_idx]
             yield X_batch, y_batch
 
-    n_inputs = X.shape[1]  # MNIST
+    n_inputs = X_train.shape[1]  # MNIST
     n_hidden1 = 300
     n_hidden2 = 100
     n_hidden3 = 50
