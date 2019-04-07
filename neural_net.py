@@ -25,9 +25,10 @@ def simple_nn(X, y):
 
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])
 
+    # TODO reshape, stalling @ ~.4 accuracy
     print('Splitting to train, test, and validation sets...')
-    X_train, X_test, X_valid = np.split(X, [int(.8 * len(X)), int(.9 * len(X))])
-    y_train, y_test, y_valid = np.split(y, [int(.8 * len(y)), int(.9 * len(y))])
+    X_train, X_test, X_valid = np.split(X, [int(.7 * len(X)), int(.9 * len(X))])
+    y_train, y_test, y_valid = np.split(y, [int(.7 * len(y)), int(.9 * len(y))])
     in_size = X_train.shape[1]
     out_size = y.shape[0]
 
@@ -38,8 +39,8 @@ def simple_nn(X, y):
     model.add(Dense(12, activation='relu', input_shape=(in_size,)))
 
     # Add hidden layer s
-    model.add(Dense(in_size, activation='relu'))
-    model.add(Dropout(0.25))
+    # model.add(Dense(in_size, activation='relu'))
+    # model.add(Dropout(0.2))
     model.add(Dense(int(in_size/2), activation='relu'))
     model.add(Dense(int(in_size/4), activation='relu'))
     # model.add(Dropout(0.5))
@@ -50,16 +51,16 @@ def simple_nn(X, y):
     model.add(Dense(out_size, activation='softmax'))
 
     if OPT == 'sgd':
-        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, nesterov=True)
+        opt = optimizers.SGD(lr=lr, decay=1e-8, momentum=0.85, nesterov=True)
     elif OPT == 'adam':
-        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy'])
                        
 
     print('Training...')    
-    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), epochs=50, steps_per_epoch=64, verbose=1)
+    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), epochs=20, steps_per_epoch=128, verbose=1)
     # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     print('EValuating...')
