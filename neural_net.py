@@ -11,10 +11,11 @@ import datetime
 import tensorflow as tf
 import numpy as np
 import keras
+from keras import optimizers 
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.layers import MaxPooling3D
-from keras import optimizers 
+from keras.callbacks import TensorBoard
 
 def simple_nn(X, y):
 
@@ -27,8 +28,8 @@ def simple_nn(X, y):
 
     # TODO reshape, stalling @ ~.4 accuracy
     print('Splitting to train, test, and validation sets...')
-    X_train, X_test, X_valid = np.split(X, [int(.7 * len(X)), int(.9 * len(X))])
-    y_train, y_test, y_valid = np.split(y, [int(.7 * len(y)), int(.9 * len(y))])
+    X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
+    y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
     in_size = X_train.shape[1]
     out_size = y.shape[0]
 
@@ -41,8 +42,9 @@ def simple_nn(X, y):
     # Add hidden layer s
     # model.add(Dense(in_size, activation='relu'))
     # model.add(Dropout(0.2))
-    model.add(Dense(int(in_size/2), activation='relu'))
-    model.add(Dense(int(in_size/4), activation='relu'))
+    model.add(Dense(in_size // 2, activation='relu'))
+    model.add(Dense(in_size // 4, activation='relu'))
+    model.add(Dense(in_size // 10, activation='relu'))
     # model.add(Dropout(0.5))
 
     # model.add(MaxPooling3D(5, activation='sigmoid'))
@@ -51,16 +53,20 @@ def simple_nn(X, y):
     model.add(Dense(out_size, activation='softmax'))
 
     if OPT == 'sgd':
-        opt = optimizers.SGD(lr=lr, decay=1e-8, momentum=0.85, nesterov=True)
+        opt = optimizers.SGD(lr=lr, decay=1e-8, momentum=0.9, nesterov=True)
     elif OPT == 'adam':
         opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy'])
-                       
+
+
+    t = time.time()
+    dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
+    tensorboard = TensorBoard(log_dir='./logs/'+dt)                       
 
     print('Training...')    
-    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), epochs=20, steps_per_epoch=128, verbose=1)
+    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), epochs=100, steps_per_epoch=168, verbose=1, callbacks=[tensorboard])
     # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     print('EValuating...')
@@ -71,17 +77,18 @@ def simple_nn(X, y):
     print(score)
 
     print('Saving model...')
-    t = time.time()
-    dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
+
     path = './model/train/'
     model.save(str(path+OPT+'_'+dt+'.h5'))
 
 
 def deep_nn(X,y):
 
-
-    X_valid, X_train = X[:int(X.shape[0]/2)], X[int(X.shape[0]/2):]
-    y_valid, y_train = y[:int(y.shape[0]/2)], y[int(y.shape[0]/2):]
+    print('Splitting to train, test, and validation sets...')
+    X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
+    y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
+    in_size = X_train.shape[1]
+    out_size = y.shape[0]
 
     def shuffle_batch(X, y, batch_size):
         rnd_idx = np.random.permutation(len(X))
@@ -90,15 +97,15 @@ def deep_nn(X,y):
             X_batch, y_batch = X[batch_idx], y[batch_idx]
             yield X_batch, y_batch
 
-    n_inputs = X_train.shape[1]  # MNIST
-    n_hidden1 = 300
-    n_hidden2 = 100
+    n_inputs = in_size 
+    n_hidden1 = in_size // 4
+    n_hidden2 = in_size // 8
     n_hidden3 = 50
-    n_outputs = y.shape[1]
+    n_outputs = out_size
 
     learning_rate = 0.001
 
-    n_epochs = 20
+    n_epochs = 100
     batch_size = 200
 
     X = tf.placeholder(tf.float32, shape=(None, n_inputs), name="X")
