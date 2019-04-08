@@ -21,7 +21,7 @@ def simple_nn(X, y):
 
     # Globals
     # Lower the learning rate when using adam
-    lr = 0.01
+    lr = 0.001
     OPT = 'sgd'
 
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])
@@ -43,8 +43,10 @@ def simple_nn(X, y):
     # model.add(Dense(in_size, activation='relu'))
     # model.add(Dropout(0.2))
     model.add(Dense(in_size // 2, activation='relu'))
+    model.add(Dropout(0.1))
+    # model.add(Dense(in_size // 10, activation='relu'))
+    # model.add(Dropout(0.1))
     model.add(Dense(in_size // 4, activation='relu'))
-    model.add(Dense(in_size // 10, activation='relu'))
     # model.add(Dropout(0.5))
 
     # model.add(MaxPooling3D(5, activation='sigmoid'))
@@ -53,7 +55,7 @@ def simple_nn(X, y):
     model.add(Dense(out_size, activation='softmax'))
 
     if OPT == 'sgd':
-        opt = optimizers.SGD(lr=lr, decay=1e-8, momentum=0.9, nesterov=True)
+        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, nesterov=True)
     elif OPT == 'adam':
         opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
     model.compile(loss='categorical_crossentropy',
@@ -66,7 +68,7 @@ def simple_nn(X, y):
     tensorboard = TensorBoard(log_dir='./logs/'+dt)                       
 
     print('Training...')    
-    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), epochs=100, steps_per_epoch=168, verbose=1, callbacks=[tensorboard])
+    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), validation_data=(X_valid, y_valid), epochs=100, steps_per_epoch=168, validation_steps=25, verbose=1, shuffle=True, callbacks=[tensorboard])
     # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     print('EValuating...')
