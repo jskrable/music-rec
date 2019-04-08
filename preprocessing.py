@@ -29,14 +29,14 @@ def min_length(col):
     return measurer(col).min(axis=0) 
 
 
-# Function to transform string fields into numerical data
-def bag_of_words(corpus):
-    vectorizer = CountVectorizer()
-    x = vectorizer.fit_transform(corpus)
+# # Function to transform string fields into numerical data
+# def bag_of_words(corpus):
+#     vectorizer = CountVectorizer()
+#     x = vectorizer.fit_transform(corpus)
 
-    # NEED TO RETURN MAPPING FOR Y ALSO
-    # vectorizer.inverse_transform(x)
-    return x.toarray()
+#     # NEED TO RETURN MAPPING FOR Y ALSO
+#     # vectorizer.inverse_transform(x)
+#     return x.toarray()
 
 
 def sample_ndarray(row):
@@ -171,6 +171,9 @@ def vectorize(data, label):
             print(col)
             print(e)
 
+    # CHANGE THIS TO -1, 1??????????
+    # SCALE ONLY ON TRAIN SET?????
+    # THEN SPLIT TO TEST/VALID??
     output = scaler(output, 1)
 
     return output, y

@@ -10,6 +10,7 @@ import time
 import datetime
 import tensorflow as tf
 import numpy as np
+# from sklearn.preprocessing import MinMaxScaler
 import keras
 from keras import optimizers 
 from keras.models import Sequential
@@ -21,8 +22,10 @@ def simple_nn(X, y):
 
     # Globals
     # Lower the learning rate when using adam
-    lr = 0.001
-    OPT = 'sgd'
+    lr = 0.002
+    epochs = 20
+    batch_size = 20
+    OPT = 'adamax'
 
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])
 
@@ -30,6 +33,12 @@ def simple_nn(X, y):
     print('Splitting to train, test, and validation sets...')
     X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
     y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
+
+    # mms = MinMaxScaler()
+    # mms.fit_transform(X_train)
+    # X_
+
+
     in_size = X_train.shape[1]
     out_size = y.shape[0]
 
@@ -43,8 +52,8 @@ def simple_nn(X, y):
     # model.add(Dense(in_size, activation='relu'))
     # model.add(Dropout(0.2))
     model.add(Dense(in_size // 2, activation='relu'))
-    model.add(Dropout(0.1))
-    # model.add(Dense(in_size // 10, activation='relu'))
+    model.add(Dropout(0.2))
+    # model.add(Dense(in_sloize // 10, activation='relu'))
     # model.add(Dropout(0.1))
     model.add(Dense(in_size // 4, activation='relu'))
     # model.add(Dropout(0.5))
@@ -58,6 +67,8 @@ def simple_nn(X, y):
         opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, nesterov=True)
     elif OPT == 'adam':
         opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
+    elif OPT == 'adamax':
+        opt = keras.optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy'])
@@ -68,7 +79,7 @@ def simple_nn(X, y):
     tensorboard = TensorBoard(log_dir='./logs/'+dt)                       
 
     print('Training...')    
-    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), validation_data=(X_valid, y_valid), epochs=100, steps_per_epoch=168, validation_steps=25, verbose=1, shuffle=True, callbacks=[tensorboard])
+    model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), validation_data=(X_valid, y_valid), epochs=epochs, steps_per_epoch=batch_size, validation_steps=25, verbose=1, shuffle=True, callbacks=[tensorboard])
     # model.fit(X, y, epochs=20, batch_size=10, verbose=1)
 
     print('EValuating...')
