@@ -49,16 +49,16 @@ def simple_nn(X, y):
     # model.add(Dropout(0.2))
     model.add(Dense(in_size // 2,
                     activation='relu',
-                    activity_regularizer=regularizers.l1(1e-07),
-                    kernel_regularizer=regularizers.l1(1e-06)))
+                    activity_regularizer=regularizers.l1(1e-09),
+                    kernel_regularizer=regularizers.l1(1e-07)))
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 4,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-06)))
+                    kernel_regularizer=regularizers.l1(1e-07)))
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 10,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-05)))
+                    kernel_regularizer=regularizers.l1(1e-07)))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
