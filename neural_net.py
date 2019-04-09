@@ -13,6 +13,7 @@ import numpy as np
 # from sklearn.preprocessing import MinMaxScaler
 import keras
 from keras import optimizers 
+from keras import regularizers
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.layers import MaxPooling3D
@@ -34,11 +35,6 @@ def simple_nn(X, y):
     X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
     y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
 
-    # mms = MinMaxScaler()
-    # mms.fit_transform(X_train)
-    # X_
-
-
     in_size = X_train.shape[1]
     out_size = y.shape[0]
 
@@ -48,17 +44,18 @@ def simple_nn(X, y):
     # Add an input layer 
     model.add(Dense(12, activation='relu', input_shape=(in_size,)))
 
-    # Add hidden layer s
+    # Add hidden layers
     # model.add(Dense(in_size, activation='relu'))
     # model.add(Dropout(0.2))
-    model.add(Dense(in_size // 2, activation='relu'))
+    model.add(Dense(in_size // 2,
+                    activation='relu',
+                    activity_regularizer=regularizers.l1(0.01)))
     model.add(Dropout(0.2))
-    # model.add(Dense(in_sloize // 10, activation='relu'))
-    # model.add(Dropout(0.1))
-    model.add(Dense(in_size // 4, activation='relu'))
-    # model.add(Dropout(0.5))
-
-    # model.add(MaxPooling3D(5, activation='sigmoid'))
+    model.add(Dense(in_size // 4,
+                    activation='relu',
+                    activity_regularizer=regularizers.l1(0.01)))
+    model.add(Dropout(0.1))
+    model.add(Dense(in_size // 10, activation='relu'))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
