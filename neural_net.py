@@ -22,9 +22,9 @@ def simple_nn(X, y):
 
     # Globals
     # Lower the learning rate when using adam
-    lr = 0.02
-    epochs = 20
-    batch_size = 20
+    lr = 0.001
+    epochs = 50
+    batch_size = 50
     OPT = 'adamax'
 
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])

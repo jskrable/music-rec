@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 
-# Progress bar for cligit s
+# Progress bar for cli
 def progress(count, total, suffix=''):
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
