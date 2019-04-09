@@ -61,7 +61,7 @@ def simple_nn(X, y):
     # model.add(MaxPooling3D(5, activation='sigmoid'))
 
     # Add an output layer 
-    model.add(Dense(out_size, activation='softmax'))
+    model.add(Dense(1, activation='softmax'))
 
     if OPT == 'sgd':
         opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, nesterov=True)

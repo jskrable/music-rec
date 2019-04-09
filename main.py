@@ -18,7 +18,7 @@ import neural_net as nn
 
 
 t_start = time.time()
-songsDF = read.h5_to_df('./data/MillionSongSubset/data', 8000)
+songsDF = read.h5_to_df('./data/MillionSongSubset/data', 6000)
 t_extract = time.time()
 print('\nGot', len(songsDF.index), 'songs in', round((t_extract-t_start), 2), 'seconds.')
 
