@@ -27,16 +27,13 @@ def simple_nn(X, y):
     batch_size = 50
     OPT = 'adamax'
 
+    # For cat_xentropy
     y = keras.utils.to_categorical(y, num_classes=y.shape[0])
 
     # TODO reshape, stalling @ ~.4 accuracy
     print('Splitting to train, test, and validation sets...')
     X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
     y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
-
-    # mms = MinMaxScaler()
-    # mms.fit_transform(X_train)
-    # X_
 
 
     in_size = X_train.shape[1]
@@ -46,15 +43,19 @@ def simple_nn(X, y):
     model = Sequential()
 
     # Add an input layer 
-    model.add(Dense(12, activation='relu', input_shape=(in_size,)))
+    # model.add(Dense(12, activation='relu', input_shape=(in_size,)))
 
-    # Add hidden layer s
-    # model.add(Dense(in_size, activation='relu'))
+    # Add hidden layers
+    model.add(Dense(in_size, activation='relu'))
 
     # ADD REGULARIZERS TO LAYERS??
-    model.add(Dense(in_size // 2, activation='relu'))
+    model.add(Dense(in_size // 2,
+                    activation='relu',
+                    activity_regularizer=regularizers.l1(0.01)))
     model.add(Dropout(0.2))
-    model.add(Dense(in_size // 4, activation='relu'))
+    model.add(Dense(in_size // 4,
+                    activation='relu',
+                    activity_regularizer=regularizers.l1(0.01)))
     model.add(Dropout(0.3))
     model.add(Dense(in_size // 10, activation='relu'))
 
@@ -69,7 +70,7 @@ def simple_nn(X, y):
         opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
     elif OPT == 'adamax':
         opt = keras.optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
-    model.compile(loss='sparse_categorical_crossentropy',
+    model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy'])
 
