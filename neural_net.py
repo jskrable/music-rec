@@ -23,7 +23,7 @@ def simple_nn(X, y):
     # Globals
     # Lower the learning rate when using adam
     lr = 0.001
-    epochs = 50
+    epochs = 25
     batch_size = 50
     OPT = 'adamax'
 
@@ -50,6 +50,8 @@ def simple_nn(X, y):
 
     # Add hidden layer s
     # model.add(Dense(in_size, activation='relu'))
+
+    # ADD REGULARIZERS TO LAYERS??
     model.add(Dense(in_size // 2, activation='relu'))
     model.add(Dropout(0.2))
     model.add(Dense(in_size // 4, activation='relu'))
