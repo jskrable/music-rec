@@ -32,6 +32,7 @@ print('Cleaned and processed',len(songsDF.index),'rows in',round((t_preproc - t_
 
 
 print('Training neural network...')
+print('[',X.shape[1],'] x [',y.shape[0],']')
 model = nn.simple_nn(X, y)
 # nn.deep_nn(X, y)
 t_nn = time.time()

@@ -132,7 +132,8 @@ def convert_byte_data(df):
 
     np_str_df = obj_df[np_str_cols]
     for col in np_str_cols:
-        try: 
+        try:
+            print('Cleaning ',col)
             df[col] = np_str_df[col].apply(lambda x: x.astype('U'))
         except UnicodeDecodeError as e:
             print(e)
@@ -148,6 +149,7 @@ def vectorize(data, label):
 
     for col in data:
         try:
+            print('Vectorizing ',col)
             if col == label:
                 y_map, y = categorical(data[col])
 
