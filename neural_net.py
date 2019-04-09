@@ -22,7 +22,7 @@ def simple_nn(X, y):
 
     # Globals
     # Lower the learning rate when using adam
-    lr = 0.002
+    lr = 0.02
     epochs = 20
     batch_size = 20
     OPT = 'adamax'
