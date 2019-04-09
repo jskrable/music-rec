@@ -49,13 +49,17 @@ def simple_nn(X, y):
     # model.add(Dropout(0.2))
     model.add(Dense(in_size // 2,
                     activation='relu',
-                    activity_regularizer=regularizers.l1(0.001)))
+                    activity_regularizer=regularizers.l1(0.000025),
+                    kernel_regularizer=regularizers.l1(0.00025)))
     model.add(Dropout(0.2))
     model.add(Dense(in_size // 4,
-                    activation='relu'))
-                    # activity_regularizer=regularizers.l1(0.01)))
+                    activation='relu',
+                    activity_regularizer=regularizers.l1(0.000025),
+                    kernel_regularizer=regularizers.l1(0.00025)))
     model.add(Dropout(0.1))
-    model.add(Dense(in_size // 10, activation='relu'))
+    model.add(Dense(in_size // 10,
+                    activation='relu',
+                    kernel_regularizer=regularizers.l1(0.00025)))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
@@ -73,7 +77,7 @@ def simple_nn(X, y):
 
     t = time.time()
     dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
-    tensorboard = TensorBoard(log_dir='./logs/'+dt)                       
+    tensorboard = TensorBoard(log_dir=str('./logs/'+OPT+'_'+dt))                       
 
     print('Training...')    
     model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), validation_data=(X_valid, y_valid), epochs=epochs, steps_per_epoch=batch_size, validation_steps=25, verbose=1, shuffle=True, callbacks=[tensorboard])
