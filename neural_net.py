@@ -50,13 +50,11 @@ def simple_nn(X, y):
 
     # Add hidden layer s
     # model.add(Dense(in_size, activation='relu'))
-    # model.add(Dropout(0.2))
     model.add(Dense(in_size // 2, activation='relu'))
     model.add(Dropout(0.2))
-    # model.add(Dense(in_sloize // 10, activation='relu'))
-    # model.add(Dropout(0.1))
     model.add(Dense(in_size // 4, activation='relu'))
-    # model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
+    model.add(Dense(in_size // 10, activation='relu'))
 
     # model.add(MaxPooling3D(5, activation='sigmoid'))
 
