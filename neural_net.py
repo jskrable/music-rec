@@ -8,37 +8,36 @@ jack skrable
 
 import time
 import datetime
-import tensorflow as tf
 import numpy as np
-# from sklearn.preprocessing import MinMaxScaler
-
 from sklearn.utils.class_weight import compute_class_weight
-import keras
 from keras import optimizers 
 from keras import regularizers
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.layers import MaxPooling3D
 from keras.callbacks import TensorBoard
+from keras.utils import to_categorical
 
 def simple_nn(X, y):
 
     # Globals
-    # Lower the learning rate when using adam
     lr = 0.001
-    epochs = 200
+    epochs = 100
     batch_size = 50
     OPT = 'adamax'
 
+    # Calculate class weights to improve accuracy 
     class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
     swm = np.array([class_weights[i] for i in y])
 
-    y = keras.utils.to_categorical(y, num_classes=y.shape[0])
+    # Convert target to categorical
+    y = to_categorical(y, num_classes=y.shape[0])
 
+    # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
     X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
     y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
 
+    # Get input and output layer sizes from input data
     in_size = X_train.shape[1]
     # Modify this when increasing artist list target
     out_size = y.shape[0]
@@ -50,34 +49,40 @@ def simple_nn(X, y):
     model.add(Dense(12, activation='relu', input_shape=(in_size,)))
 
     # Add hidden layers
-    # model.add(Dense(in_size, activation='relu'))
-    # model.add(Dropout(0.2))
     model.add(Dense(in_size // 2,
                     activation='relu',
+                    # Regularize to reduce overfitting
                     activity_regularizer=regularizers.l1(1e-08),
                     kernel_regularizer=regularizers.l1(1e-06)))
+    # Dropout to reduce overfitting
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 4,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-07)))
+                    kernel_regularizer=regularizers.l1(1e-06)))
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 10,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-07)))
+                    kernel_regularizer=regularizers.l1(1e-06)))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
 
     if OPT == 'sgd':
-        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, nesterov=True)
+        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, 
+                             nesterov=True)
     elif OPT == 'adam':
-        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
+        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999,
+                              epsilon=None, decay=1e-6, amsgrad=False)
     elif OPT == 'adamax':
-        opt = keras.optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0)
+        opt = optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999,
+                                epsilon=None, decay=0.0)
+
+    # def metric_categorical_crossentropy(y_true, y_pred):
+    #     return
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
-                  metrics=['accuracy'],
+                  metrics=['accuracy','msle'],
                   sample_weight_mode=swm)
 
 
@@ -101,6 +106,7 @@ def simple_nn(X, y):
     path = './model/train/'
     model.save(str(path+OPT+'_'+dt+'.h5'))
 
+    return model
 
 def deep_nn(X,y):
 
