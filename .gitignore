@@ -27,6 +27,8 @@
 *.sqlite
 *.db
 data/*
+logs/*
+models/*
 
 # OS generated files #
 ######################

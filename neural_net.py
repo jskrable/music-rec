@@ -21,7 +21,7 @@ def simple_nn(X, y):
 
     # Globals
     lr = 0.001
-    epochs = 100
+    epochs = 150
     batch_size = 50
     OPT = 'adamax'
 
