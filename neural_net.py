@@ -16,14 +16,21 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.callbacks import TensorBoard
 from keras.utils import to_categorical
+from keras import backend as K
 
-def simple_nn(X, y):
+def simple_nn(X, y, label):
+
+    K.clear_session()
 
     # Globals
     lr = 0.001
-    epochs = 150
-    batch_size = 50
+    epochs = 200
+    batch_size = 64
     OPT = 'adamax'
+
+    t = time.time()
+    dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
+    name = '_'.join([OPT, str(epochs), str(batch_size), dt]) + '.json'
 
     # Calculate class weights to improve accuracy 
     class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
@@ -86,9 +93,13 @@ def simple_nn(X, y):
                   sample_weight_mode=swm)
 
 
-    t = time.time()
-    dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
-    tensorboard = TensorBoard(log_dir=str('./logs/'+OPT+'_'+dt))                       
+
+    tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name),
+                              histogram_freq=1,
+                              write_graph=True,
+                              write_images=False)  
+
+    # tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name))                     
 
     print('Training...')    
     # model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), validation_data=(X_valid, y_valid), epochs=epochs, steps_per_epoch=batch_size, validation_steps=25, verbose=1, shuffle=True, callbacks=[tensorboard])
@@ -103,8 +114,8 @@ def simple_nn(X, y):
 
     print('Saving model...')
 
-    path = './model/train/'
-    model.save(str(path+OPT+'_'+dt+'.h5'))
+    path = './model/train/' + label + '/'
+    model.save(str(path+name+'.h5'))
 
     return model
 

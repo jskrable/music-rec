@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # coding: utf-8
 """
-neural_net.py
-04-03-19
+kmeans.py
+04-08-19
 jack skrable
 """
 

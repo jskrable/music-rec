@@ -20,7 +20,7 @@ import kmeans as km
 
 
 t_start = time.time()
-songsDF = read.h5_to_df('./data/MillionSongSubset/data', 2000)
+songsDF = read.h5_to_df('./data/MillionSongSubset/data', 200)
 t_extract = time.time()
 print('\nGot', len(songsDF.index), 'songs in',
       round((t_extract-t_start), 2), 'seconds.')
@@ -37,7 +37,7 @@ print('Cleaned and processed', len(songsDF.index), 'rows in',
 
 print('Training neural network...')
 print('[', X.shape[1], '] x [', y.shape[0], ']')
-model_simple = nn.simple_nn(X, y)
+model_simple = nn.simple_nn(X, y, 'std')
 # nn.deep_nn(X, y)
 t_nn = time.time()
 print('Neural network trained in', round((t_nn - t_preproc), 2), 'seconds.')
@@ -45,10 +45,10 @@ print('Neural network trained in', round((t_nn - t_preproc), 2), 'seconds.')
 # utils.model_check(X, 10)
 
 clusters = 10
-print('Apply k-Means classifier with', clusters, 'clusters...')
+print('Applying k-Means classifier with', clusters, 'clusters...')
 kmX = km.kmeans(X, clusters)
 print('[', kmX.shape[1], '] x [', y.shape[0], ']')
-model_classified = nn.simple_nn(kmX, y)
+model_classified = nn.simple_nn(kmX, y, 'hyb')
 t_km = time.time()
 print('Hybrid k-Means neural network trained in', round((t_km - t_nn), 2), 'seconds.')
 # Check model

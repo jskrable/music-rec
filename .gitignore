@@ -28,7 +28,8 @@
 *.db
 data/*
 logs/*
-models/*
+model/*
+archive/*
 
 # OS generated files #
 ######################
