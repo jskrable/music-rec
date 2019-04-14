@@ -3,24 +3,16 @@
 search_terms = []
 
 $(function() {
-    $('#search-btn').click((e) => {
-        var value = $('#search-terms-in').val();
+
+	loadSongs();
+
+
+    $('#search-bar').keyup((e) => {
+        var value = $('#search-bar').val();
         search_terms.push(value.toLowerCase());
-        var close_id = "term-" + value;
         if (value != "") {
-            $('#search-terms-div').append(
-                '<div class="m-1 d-inline-block alert alert-secondary alert-dismissible fade show" role="alert">' +
-                '<strong>' + value + '</strong>' +
-                '<button id="' + close_id + '" type="button" class="close" data-dismiss="alert" onclick="closeTerm(this)">' +
-                '<span aria-hidden="true">&times;</span>' +
-                '</button>' +
-                '</div>'
-            );
-            $('#search-terms-in').val('');
-        }
-        $('#search-terms-in').focus();
-        // Call search function
-        filterFileMenu();
+            displaySongs(searchOnType(value));
+            }
     });
 
     // Include enters
@@ -31,3 +23,62 @@ $(function() {
     });
 
 });
+
+
+function displaySongs(list) {
+
+	$('#search-results').empty()
+
+	html = ''
+	list = list.slice(0,15)
+
+	list.forEach(function(entry) {
+		html += '<li><strong>' + entry.metadata_songs_title + '</strong> by ' +
+				entry.metadata_songs_artist_name
+		if (entry.musicbrainz_songs_year != 0) {
+			html += ' (' + entry.musicbrainz_songs_year + ')'
+		}
+	})
+
+	$('#search-results').append(html)
+}
+
+
+// Grabs all song lookup metadata and stores in session storage
+function loadSongs() {
+
+	fetch('http://localhost:5001/lookup')
+		.then(function(response) {
+    		if (response.ok && response.status == 200) {
+    			data = response.json().then(function(data) {
+    				sessionStorage.setItem('song-lookup', JSON.stringify(data.entity));
+    				return data;
+    			})
+    		} else {
+    			console.log(response)
+    		}
+    	}, function(error) {
+    		console.log(error)
+    	}
+  		)
+}
+
+
+// Filters session storage entity on search terms
+function searchOnType(term) {
+
+	// Init filtered list
+	filtered = []
+	songs = JSON.parse(sessionStorage.getItem('song-lookup'));
+
+	// Perform filter searchs
+	filtered = songs.filter(function(song) {
+		match = Object.values(song).toString().toLowerCase()
+				.indexOf(term.toLowerCase()) > 0 ?
+					true :
+					false
+		return match
+		});
+
+	return filtered
+}

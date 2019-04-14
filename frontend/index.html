@@ -38,7 +38,7 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <div class="container">
     <div class="row">
-      <div class="one-half column" style="margin-top: 10%">
+      <div class="full column" style="margin-top: 10%">
         <h4>Welcome to the Music Recommender</h4>
         <p>Please choose some of your favorite songs from the form below, and let the algorithm return some recommendations.</p>
         <p><a href='https://github.com/jskrable/music-rec' target="_blank">The source code is here if interested. </a> </p>
@@ -53,20 +53,35 @@
     </div>
     <div class="row">
       <div class="nine columns">
-        <input class="u-full-width" type="search" placeholder="Search for songs..." id="search-terms-in">
+        <input class="u-full-width" type="search" placeholder="Search for songs..." id="search-bar">
       </div>  
       <div class="three columns">
         <input class="button-primary" type="submit" value="Search" id="search-btn">
       </div>
-      <!-- <div class="input-group my-3">
-          <input id="search-terms-in" type="text" class="form-control" aria-describedby="button-addon2" placeholder="Search for songs...">
-          <div class="input-group-append">
-              <button id="search-btn" class="btn btn-dark" type="button">
-              Search
-            </button>
-          </div>
-      </div> -->
     </div>
+
+    <div class="row">
+      <ul id="search-results">
+        <!-- Search results go here -->
+      </ul>
+    </div>
+
+<!-- 
+    <table class="u-full-width">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Artist</th>
+          <th>Album</th>
+          <th>Year</th>
+        </tr>
+      </thead>
+      <tbody id="search-results">
+
+      </tbody>
+    </table> -->
+
+
 
   </div>
 
