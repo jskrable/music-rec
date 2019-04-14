@@ -26,6 +26,11 @@
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <link rel="icon" type="image/png" href="images/favicon.png">
 
+  <!-- JS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="js/search.js"></script>
+
 </head>
 <body>
 
@@ -39,6 +44,30 @@
         <p><a href='https://github.com/jskrable/music-rec' target="_blank">The source code is here if interested. </a> </p>
       </div>
     </div>
+  
+
+    <div class="row">
+      <div id="search-terms-div">
+          <!-- search terms go here -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="nine columns">
+        <input class="u-full-width" type="search" placeholder="Search for songs..." id="search-terms-in">
+      </div>  
+      <div class="three columns">
+        <input class="button-primary" type="submit" value="Search" id="search-btn">
+      </div>
+      <!-- <div class="input-group my-3">
+          <input id="search-terms-in" type="text" class="form-control" aria-describedby="button-addon2" placeholder="Search for songs...">
+          <div class="input-group-append">
+              <button id="search-btn" class="btn btn-dark" type="button">
+              Search
+            </button>
+          </div>
+      </div> -->
+    </div>
+
   </div>
 
 <!-- End Document
