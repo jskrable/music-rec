@@ -25,13 +25,19 @@ $(function() {
 });
 
 
+
+// Pushes song list to page for display
 function displaySongs(list) {
 
+	// Clear div
 	$('#search-results').empty()
 
+	// Init vars
 	html = ''
+	// Max 15 songs displayed
 	list = list.slice(0,15)
 
+	// Loop thru list and add each song
 	list.forEach(function(entry) {
 		html += '<li><strong>' + entry.metadata_songs_title + '</strong> by ' +
 				entry.metadata_songs_artist_name
@@ -40,6 +46,7 @@ function displaySongs(list) {
 		}
 	})
 
+	// Push html
 	$('#search-results').append(html)
 }
 
@@ -47,10 +54,12 @@ function displaySongs(list) {
 // Grabs all song lookup metadata and stores in session storage
 function loadSongs() {
 
+	// Hit flask API for lookup data
 	fetch('http://localhost:5001/lookup')
 		.then(function(response) {
     		if (response.ok && response.status == 200) {
     			data = response.json().then(function(data) {
+    				// Push to session storage if successful request
     				sessionStorage.setItem('song-lookup', JSON.stringify(data.entity));
     				return data;
     			})
