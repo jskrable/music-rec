@@ -178,7 +178,7 @@ def vectorize(data, label):
     # THEN SPLIT TO TEST/VALID??
     output = scaler(output, 1)
 
-    return output, y
+    return output, y, y_map
 
 
 
