@@ -20,6 +20,8 @@ def model_check(X, n):
 
 lookupDF = df[['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_songs_artist_name','musicbrainz_songs_year','metadata_songs_release']]
 
+convert_to_byte_data(lookupDF)
+
 lookupDF.to_hdf('./frontend/data/lookup.h5', key='df', mode='w')
 
 pd.read_hdf('./frontend/data/lookup.h5', 'df')

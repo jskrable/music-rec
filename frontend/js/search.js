@@ -15,13 +15,6 @@ $(function() {
             }
     });
 
-    // Include enters
-    $('#search-terms-in').keypress((e) => {
-        if (e.which == 13) {
-            $('#search-btn').click();
-        }
-    });
-
 });
 
 
@@ -39,15 +32,26 @@ function displaySongs(list) {
 
 	// Loop thru list and add each song
 	list.forEach(function(entry) {
-		html += '<li><strong>' + entry.metadata_songs_title + '</strong> by ' +
+		html += '<div>' +
+				'<p><b>' + entry.metadata_songs_title + '</b> by ' +
 				entry.metadata_songs_artist_name
 		if (entry.musicbrainz_songs_year != 0) {
 			html += ' (' + entry.musicbrainz_songs_year + ')'
 		}
+		html += '<button id="' + entry.metadata_songs_song_id + '" title="Add ' +
+				entry.metadata_songs_title + '" style="float: right;">Add</button>'
+		html += '</p></div>'
 	})
 
 	// Push html
 	$('#search-results').append(html)
+
+	// jQuery action on button click
+	// Expand this to pin chosen songs to div above search bar
+	// '#chosen-songs-div'
+	$(":button").on('click', (b) => {
+	    console.log(b.target.id);  
+	});
 }
 
 
