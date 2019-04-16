@@ -6,17 +6,35 @@ neural_net.py
 jack skrable
 """
 
+import os
 import time
 import datetime
 import numpy as np
 from sklearn.utils.class_weight import compute_class_weight
 from keras import optimizers 
 from keras import regularizers
+from keras.models import model_from_json
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.callbacks import TensorBoard
 from keras.utils import to_categorical
 from keras import backend as K
+
+
+def set_opt(OPT, lr):
+    
+    if OPT == 'sgd':
+        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, 
+                             nesterov=True)
+    elif OPT == 'adam':
+        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999,
+                              epsilon=None, decay=1e-6, amsgrad=False)
+    elif OPT == 'adamax':
+        opt = optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999,
+                                epsilon=None, decay=0.0)
+
+    return opt
+
 
 def simple_nn(X, y, label):
 
@@ -30,7 +48,7 @@ def simple_nn(X, y, label):
 
     t = time.time()
     dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
-    name = '_'.join([OPT, str(epochs), str(batch_size), dt]) + '.json'
+    name = '_'.join([OPT, str(epochs), str(batch_size), dt])
 
     # Calculate class weights to improve accuracy 
     class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
@@ -74,126 +92,77 @@ def simple_nn(X, y, label):
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
 
-    if OPT == 'sgd':
-        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, 
-                             nesterov=True)
-    elif OPT == 'adam':
-        opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999,
-                              epsilon=None, decay=1e-6, amsgrad=False)
-    elif OPT == 'adamax':
-        opt = optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999,
-                                epsilon=None, decay=0.0)
 
-    # def metric_categorical_crossentropy(y_true, y_pred):
-    #     return
+    opt = set_opt(OPT, lr)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy','msle'],
                   sample_weight_mode=swm)
 
-
-
-    tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name),
+    tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name+'.json'),
                               histogram_freq=1,
                               write_graph=True,
-                              write_images=False)  
-
-    # tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name))                     
+                              write_images=False)                 
 
     print('Training...')    
-    # model.fit(tf.convert_to_tensor(X_train), tf.convert_to_tensor(y_train), validation_data=(X_valid, y_valid), epochs=epochs, steps_per_epoch=batch_size, validation_steps=25, verbose=1, shuffle=True, callbacks=[tensorboard])
     model.fit(X, y, validation_data=(X_valid, y_valid), epochs=epochs, batch_size=batch_size, verbose=1, shuffle=True, callbacks=[tensorboard])
 
-    print('EValuating...')
+    print('Evaluating...')
     y_pred = model.predict(X_test)
-
     score = model.evaluate(X_test, y_test,verbose=1)
-
     print(score)
 
     print('Saving model...')
-
-    path = './model/train/' + label + '/'
-    model.save(str(path+name+'.h5'))
+    # Make directories to save model files
+    path = './model/train/' + dt
+    os.mkdir(path)
+    path += ('/' + label)
+    os.mkdir(path)
+    # Save model structure json
+    model_json = model.to_json()
+    with open(path + '/model.json', 'w') as file:
+        file.write(model_json)
+    # Save weights as h5
+    model.save_weights(path + '/weights.h5')
+    # Save sample weight mode
+    np.savetxt(path + '/sample_weights.csv', swm, delimiter=',')
+    # Save hyperparams
+    with open(path + '/hyperparams.csv', 'w') as file:
+        file.write(','.join([str(lr), OPT]))
+    # hyperparams = np.asarray([lr, OPT])
+    # np.savetxt(path + '/hyperparams.csv', hyperparams, delimiter=',')
+    print('Model saved to disk')
 
     return model
 
-def deep_nn(X,y):
 
-    print('Splitting to train, test, and validation sets...')
-    # y = keras.utils.to_categorical(y, num_classes=y.shape[0])
-    X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
-    y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
-    in_size = X_train.shape[1]
-    out_size = y.shape[0]
+# Function to load model from disk
+def load_model(path):
 
-    def shuffle_batch(X, y, batch_size):
-        rnd_idx = np.random.permutation(len(X))
-        n_batches = np.ceil(len(X) / batch_size).astype(int)
-        for batch_idx in np.array_split(rnd_idx, n_batches):
-            X_batch, y_batch = X[batch_idx], y[batch_idx]
-            yield X_batch, y_batch
+    # Get neural net architecture
+    with open(path + '/model.json','r') as file:
+        structure = file.read()
+    model = model_from_json(structure)
+    # Get weights
+    model.load_weights(path + '/weights.h5')
+    # Get sample weights for compiler
+    swm = np.genfromtxt(path + '/sample_weights.csv', delimiter=',')
+    # Get hyperparameters
+    with open(path + '/hyperparams.csv', 'r') as file:
+        lr, OPT = file.read().split(',')
+    # Create custom optimizer
+    opt = set_opt(OPT, float(lr))
 
-    n_inputs = in_size 
-    n_hidden1 = in_size // 4
-    n_hidden2 = in_size // 8
-    n_hidden3 = 100
-    n_outputs = out_size
+    # Compile the loaded model
+    model.compile(loss='categorical_crossentropy',
+              optimizer=opt,
+              metrics=['accuracy','msle'],
+              sample_weight_mode=swm)
 
-    learning_rate = 0.001
+    return model
 
-    n_epochs = 100
-    batch_size = 200
 
-    X = tf.placeholder(tf.float32, shape=(None, n_inputs), name="X")
-    y = tf.placeholder(tf.int32, shape=(None), name="y")
 
-    with tf.name_scope("dnn"):
-        hidden_layer_1 = tf.layers.dense(X, n_hidden1, activation=tf.nn.relu, name="hidden_layer_1")
-        hidden_layer_2 = tf.layers.dense(hidden_layer_1, n_hidden2, activation=tf.nn.relu, name="hidden_layer_2")
-        hidden_layer_3 = tf.layers.dense(hidden_layer_2, n_hidden3, activation=tf.nn.relu, name="hidden_layer_3")
-        logits = tf.layers.dense(hidden_layer_3, n_outputs, name="outputs")
 
-        tf.summary.histogram('hidden_layer_1', hidden_layer_1)
-        tf.summary.histogram('hidden_layer_2', hidden_layer_2)
-        tf.summary.histogram('hidden_layer_3', hidden_layer_3)
 
-    with tf.name_scope("loss"):
-        xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits)
-        loss = tf.reduce_mean(xentropy, name="loss")
-
-    with tf.name_scope("train"):
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-        training_op = optimizer.minimize(loss)
-
-    with tf.name_scope("eval"):
-        correct = tf.nn.in_top_k(logits, y, 1)
-        accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
-        tf.summary.scalar('accuracy', accuracy)
-
-    init = tf.global_variables_initializer()
-    merged_summaries = tf.summary.merge_all()
-
-    saver = tf.train.Saver()
-
-    means = X_train.mean(axis=0, keepdims=True)
-    stds = X_train.std(axis=0, keepdims=True) + 1e-10
-    X_val_scaled = (X_valid - means) / stds
-
-    train_saver = tf.summary.FileWriter('./model/train', tf.get_default_graph())  # async file saving object
-    test_saver = tf.summary.FileWriter('./model/test')  # async file saving object
-
-    with tf.Session() as sess:
-        init.run()
-        for epoch in range(n_epochs):
-            for X_batch, y_batch in shuffle_batch(X_train, y_train, batch_size):
-                X_batch_scaled = (X_batch - means) / stds
-                summaries, _ = sess.run([merged_summaries, training_op], feed_dict={X: X_batch, y: y_batch})
-            train_saver.add_summary(summaries, epoch)
-            _, acc_batch = sess.run([merged_summaries, accuracy], feed_dict={X: X_batch, y: y_batch})
-            train_summaries, acc_valid = sess.run([merged_summaries, accuracy], feed_dict={X: X_valid, y: y_valid})
-            test_saver.add_summary(train_summaries, epoch)
-            print(epoch, "Batch accuracy:", acc_batch, "Validation accuracy:", acc_valid)
-
-        train_saver.flush()

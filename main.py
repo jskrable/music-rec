@@ -12,7 +12,6 @@ import pandas as pd
 import numpy as np
 
 # Custom imports
-import utils
 import read_h5 as read
 import preprocessing as pp
 import neural_net as nn

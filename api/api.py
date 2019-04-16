@@ -36,18 +36,17 @@ def load_lookups():
 	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
 
 
-@app.route("/predict", methods=["POST"])
-def predict():
+
+@app.route("/recommend", methods=["GET"])
+def recommend():
 	# initialize the data dictionary that will be returned from the
 	# view
 	data = {"success": False}
 
 	# ensure an image was properly uploaded to our endpoint
-	if flask.request.method == "POST":
-		if flask.request.files.get("image"):
-			# read the image in PIL format
-			image = flask.request.files["image"].read()
-			image = Image.open(io.BytesIO(image))
+	if flask.request.method == "GET":
+		
+		song_id = flask.request.args.get('song')
 
 			# preprocess the image and prepare it for classification
 			image = prepare_image(image, target=(224, 224))
@@ -72,7 +71,6 @@ def predict():
 
 
 @app.route("/lookup", methods=["GET"])
-# @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def lookup():
 	# initialize the data dictionary that will be returned from the
 	# view
