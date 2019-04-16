@@ -93,16 +93,26 @@ def process_metadata_list(col):
     max_len = max_length(col)
     col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
     xx = np.stack(col.values)
-    return xx
+    return xx, x_map
 
+
+def categorical(row, map_size):
+    row = np.array([1 if i in row else 0 for i, v in enumerate(np.zeros(map_size))])
+    return row
 
 # Function to translate target artist list into discrete integer ids
-def categorical(col):
-    # Simplify to one artist
-    col = col.apply(lambda x: x[0])
+def process_target(col):
+    # Simplify to 10 artists
+    col = col.apply(lambda x: x[:10])
     # Get all unique values, unpack into a map
-    # TODO reassign these to the right row
-    y_map, y = np.unique(col.values, return_inverse=True)
+    y_raw, y_map = process_metadata_list(col)
+
+    # Convert to dataframe for categorical application
+    target = pd.DataFrame(y_raw)
+    target = target.apply(lambda x: categorical(x.values, y_map.size), axis=1)
+
+    # Output matrix of categorical values
+    y = np.stack(target.values)
     return y_map, y
 
 
@@ -151,7 +161,7 @@ def vectorize(data, label):
         try:
             print('Vectorizing ',col)
             if col == label:
-                y_map, y = categorical(data[col])
+                y_map, y = process_target(data[col])
 
             elif data[col].dtype == 'O':
                 if str(type(data[col].iloc[0])) == "<class 'str'>":
@@ -159,7 +169,7 @@ def vectorize(data, label):
                     xx = pd.get_dummies(data[col]).values
                 elif col.split('_')[0] == 'metadata':
                     # print('case 2',col)
-                    xx = process_metadata_list(data[col])
+                    xx, _ = process_metadata_list(data[col])
                 else:
                     # print('case 3',col)
                     xx = process_audio(data[col])
@@ -182,35 +192,35 @@ def vectorize(data, label):
 
 
 
-# Function to compare model input and output
-# MOVE TO A NEW MODULE????
-def target_vocab(data, col, y):
+# # Function to compare model input and output
+# # MOVE TO A NEW MODULE????
+# def target_vocab(data, col, y):
 
-    # Init count vectorizer
-    vec = CountVectorizer()
-    vec.fit_transform(data[col].values)
+#     # Init count vectorizer
+#     vec = CountVectorizer()
+#     vec.fit_transform(data[col].values)
 
-    # Create the lookup list ordered correctly by index
-    terms = np.array(list(vec.vocabulary_.keys()))
-    indices = np.array(list(vec.vocabulary_.values()))
-    inverse_vocabulary = terms[np.argsort(indices)]
+#     # Create the lookup list ordered correctly by index
+#     terms = np.array(list(vec.vocabulary_.keys()))
+#     indices = np.array(list(vec.vocabulary_.values()))
+#     inverse_vocabulary = terms[np.argsort(indices)]
 
-    # Get input data and output data
-    # TODO vectorize this, too slow
-    for i, v in data[col].iteritems():
-        source = np.sort(np.char.lower(v))
-        pred = np.sort(np.array([inverse_vocabulary[i] for i, v in enumerate(y[i]) if v == 1]))
-        # Get intersection of arrays
-        matching = np.intersect1d(source, pred)
+#     # Get input data and output data
+#     # TODO vectorize this, too slow
+#     for i, v in data[col].iteritems():
+#         source = np.sort(np.char.lower(v))
+#         pred = np.sort(np.array([inverse_vocabulary[i] for i, v in enumerate(y[i]) if v == 1]))
+#         # Get intersection of arrays
+#         matching = np.intersect1d(source, pred)
 
-        print(matching.shape[0])
+#         print(matching.shape[0])
 
 
 
-def set_target(df):
-    # Compare output of NN artist to this list of artists
-    rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
-    relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
-    artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
-    relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
+# def set_target(df):
+#     # Compare output of NN artist to this list of artists
+#     rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
+#     relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
+#     artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
+#     relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
 

@@ -36,14 +36,14 @@ def set_opt(OPT, lr):
     return opt
 
 
-def simple_nn(X, y, label):
+def deep_nn(X, y, label):
 
     K.clear_session()
 
     # Globals
     lr = 0.001
-    epochs = 200
-    batch_size = 64
+    epochs = 400
+    batch_size = 20
     OPT = 'adamax'
 
     t = time.time()
@@ -51,11 +51,11 @@ def simple_nn(X, y, label):
     name = '_'.join([OPT, str(epochs), str(batch_size), dt])
 
     # Calculate class weights to improve accuracy 
-    class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
-    swm = np.array([class_weights[i] for i in y])
+    # class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
+    # swm = np.array([class_weights[i] for i in y])
 
     # Convert target to categorical
-    y = to_categorical(y, num_classes=y.shape[0])
+    # y = to_categorical(y, num_classes=y.shape[0])
 
     # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
@@ -65,7 +65,7 @@ def simple_nn(X, y, label):
     # Get input and output layer sizes from input data
     in_size = X_train.shape[1]
     # Modify this when increasing artist list target
-    out_size = y.shape[0]
+    out_size = y.shape[1]
 
     # Initialize the constructor
     model = Sequential()
@@ -77,17 +77,17 @@ def simple_nn(X, y, label):
     model.add(Dense(in_size // 2,
                     activation='relu',
                     # Regularize to reduce overfitting
-                    activity_regularizer=regularizers.l1(1e-08),
-                    kernel_regularizer=regularizers.l1(1e-06)))
+                    activity_regularizer=regularizers.l1(1e-09),
+                    kernel_regularizer=regularizers.l1(1e-08)))
     # Dropout to reduce overfitting
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 4,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-06)))
+                    kernel_regularizer=regularizers.l1(1e-08)))
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 10,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-06)))
+                    kernel_regularizer=regularizers.l1(1e-08)))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
@@ -97,8 +97,9 @@ def simple_nn(X, y, label):
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
-                  metrics=['accuracy','msle'],
-                  sample_weight_mode=swm)
+                  # metrics=['accuracy','msle'],
+                  metrics=['accuracy'])
+                  # sample_weight_mode=swm)
 
     tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name+'.json'),
                               histogram_freq=1,
@@ -106,7 +107,9 @@ def simple_nn(X, y, label):
                               write_images=False)                 
 
     print('Training...')    
-    model.fit(X, y, validation_data=(X_valid, y_valid), epochs=epochs, batch_size=batch_size, verbose=1, shuffle=True, callbacks=[tensorboard])
+    model.fit(X_train, y_train, validation_data=(X_valid, y_valid),
+              epochs=epochs, batch_size=batch_size, verbose=1, 
+              shuffle=True, callbacks=[tensorboard])
 
     print('Evaluating...')
     y_pred = model.predict(X_test)
@@ -126,7 +129,7 @@ def simple_nn(X, y, label):
     # Save weights as h5
     model.save_weights(path + '/weights.h5')
     # Save sample weight mode
-    np.savetxt(path + '/sample_weights.csv', swm, delimiter=',')
+    # np.savetxt(path + '/sample_weights.csv', swm, delimiter=',')
     # Save hyperparams
     with open(path + '/hyperparams.csv', 'w') as file:
         file.write(','.join([str(lr), OPT]))

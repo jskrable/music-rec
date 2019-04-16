@@ -11,18 +11,20 @@ import pandas as pd
 
 
 # CHECK MODEL
-def model_check(X, n):
+def model_check(X, y_map, n, df, model):
     for i in range(n):
-        chk = np.random.randint(songsDF.shape[0])
-        assert songsDF.metadata_similar_artists.iloc[chk][0] == y_map[np.argmax(
-            model_simple.predict(X[chk].reshape(1, -1)))]
+        chk = np.random.randint(df.shape[0])
+        assert df.metadata_similar_artists.iloc[chk][0] == y_map[np.argmax(
+            model.predict(X[chk].reshape(1, -1)))]
 
 
-lookupDF = df[['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_songs_artist_name','musicbrainz_songs_year','metadata_songs_release']]
+def save_lookup_file(df):
 
-convert_to_byte_data(lookupDF)
+    lookupDF = df[['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_songs_artist_name','musicbrainz_songs_year','metadata_songs_release']]
 
-lookupDF.to_hdf('./frontend/data/lookup.h5', key='df', mode='w')
+    convert_to_byte_data(lookupDF)
 
-pd.read_hdf('./frontend/data/lookup.h5', 'df')
+    lookupDF.to_hdf('./frontend/data/lookup.h5', key='df', mode='w')
+
+    pd.read_hdf('./frontend/data/lookup.h5', 'df')
          
