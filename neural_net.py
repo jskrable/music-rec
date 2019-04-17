@@ -75,19 +75,19 @@ def deep_nn(X, y, label):
 
     # Add hidden layers
     model.add(Dense(in_size // 2,
-                    activation='relu',
+                    activation='relu'))
                     # Regularize to reduce overfitting
-                    activity_regularizer=regularizers.l1(1e-09),
-                    kernel_regularizer=regularizers.l1(1e-08)))
+                    # activity_regularizer=regularizers.l1(1e-09),
+                    # kernel_regularizer=regularizers.l1(1e-08)))
     # Dropout to reduce overfitting
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 4,
-                    activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-08)))
+                    activation='relu'))
+                    # kernel_regularizer=regularizers.l1(1e-08)))
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 10,
-                    activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-08)))
+                    activation='relu'))
+                    # kernel_regularizer=regularizers.l1(1e-08)))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))

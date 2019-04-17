@@ -22,7 +22,7 @@ import kmeans as km
 # Read data from h5 files into dataframe
 ###############################################################################
 t_start = time.time()
-df = read.h5_to_df('./data/MillionSongSubset/data', 3000)
+df = read.h5_to_df('./data/MillionSongSubset/data', 8000)
 t_extract = time.time()
 print('\nGot', len(df.index), 'songs in',
       round((t_extract-t_start), 2), 'seconds.')
