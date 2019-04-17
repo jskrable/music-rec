@@ -13,6 +13,7 @@ import numpy as np
 
 # Custom imports
 import utils
+import taste
 import read_h5 as read
 import preprocessing as pp
 import neural_net as nn
@@ -22,7 +23,7 @@ import kmeans as km
 # Read data from h5 files into dataframe
 ###############################################################################
 t_start = time.time()
-df = read.h5_to_df('./data/MillionSongSubset/data', 3000)
+df = read.h5_to_df('./data/MillionSongSubset/data', 100)
 t_extract = time.time()
 print('\nGot', len(df.index), 'songs in',
       round((t_extract-t_start), 2), 'seconds.')
@@ -31,6 +32,8 @@ print('\nGot', len(df.index), 'songs in',
 ###############################################################################
 print('Pre-processing extracted song data...')
 df = pp.convert_byte_data(df)
+df['taste'] = df.apply(taste.get_tastemaker)
+df = df.loc[df.taste != '0']
 X, y, y_map = pp.vectorize(df, 'metadata_similar_artists')
 t_preproc = time.time()
 print('Cleaned and processed', len(df.index), 'rows in',

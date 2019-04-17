@@ -25,12 +25,15 @@ def progress(count, total, suffix=''):
 
 
 # Get list of all h5 files in basedir
-def get_all_files(basedir, ext='.h5'):
-    print('Getting list of all h5 files in',basedir)
+def get_all_files(basedir, limit=None):
+    print('Getting list of all h5 files in',basedir,'limit',limit)
+    ext =  '.h5'
     allfiles = []
     for root, dirs, files in os.walk(basedir):
         files = glob.glob(os.path.join(root, '*'+ext))
         for f in files:
+            if isinstance(limit, int) and len(allfiles) > limit:
+                break
             allfiles.append(os.path.abspath(f))
     return allfiles
 
@@ -85,10 +88,9 @@ def get_user_taste_data(filename):
 
 # Function to read all h5 files in a directory into a dataframe
 def h5_to_df(basedir, limit=None):
-    files = get_all_files(basedir, '.h5')
-    files = files if limit is None else files[:limit]
+    files = get_all_files(basedir, limit)
     df = extract_song_data(files)
     # DEV columns. Drop this line to use the entire dataset. Be sure to get some extra memory
-    df = df[['metadata_songs_artist_id','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_segments_pitches','analysis_songs_tempo','analysis_bars_confidence','analysis_bars_start','analysis_beats_confidence','analysis_beats_start','analysis_songs_duration','analysis_songs_energy','analysis_songs_key','analysis_songs_key_confidence','analysis_songs_time_signature','analysis_songs_time_signature_confidence','metadata_similar_artists']]
+    df = df[['metadata_songs_artist_id','metadata_songs_song_id','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_segments_pitches','analysis_songs_tempo','analysis_bars_confidence','analysis_bars_start','analysis_beats_confidence','analysis_beats_start','analysis_songs_duration','analysis_songs_energy','analysis_songs_key','analysis_songs_key_confidence','analysis_songs_time_signature','analysis_songs_time_signature_confidence','metadata_similar_artists']]
 
     return df

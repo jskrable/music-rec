@@ -103,7 +103,7 @@ def categorical(row, map_size):
 # Function to translate target artist list into discrete integer ids
 def process_target(col):
     # Simplify to 10 artists
-    col = col.apply(lambda x: x[:10])
+    col = col.apply(lambda x: x[:5])
     # Get all unique values, unpack into a map
     y_raw, y_map = process_metadata_list(col)
 
