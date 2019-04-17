@@ -10,8 +10,6 @@ import re
 import pandas as pd
 import numpy as np
 from collections import Counter
-# from sklearn.feature_extraction.text import CountVectorizer
-# from sklearn.preprocessing import normalize
 from sklearn.preprocessing import MinMaxScaler
 
 
@@ -123,12 +121,7 @@ def target_genre(row):
 def sample_ndarray(row):
     SAMPLE_SIZE = 30
     sample = np.ceil(row.flatten().shape[0]/SAMPLE_SIZE).astype(int)
-    # z = []
-    # for i,r in enumerate(row):
-    #     if (i % sample) == 0:
-    #         z.append(r)
     output = np.concatenate([r for i, r in enumerate(row) if i % sample == 0]).astype(np.float)
-    # output = np.concatenate(z).astype(np.float)
     if output.size != 36:
         output = np.pad(output, (36 - output.size)//2, 'constant')
     return output
@@ -161,7 +154,6 @@ def process_audio(col):
     else:
         col = col.apply(sample_flat_array)
 
-    print(col.values.shape)
     xx = np.stack(col.values)
     return xx
 
@@ -180,26 +172,6 @@ def process_metadata_list(col):
     col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
     xx = np.stack(col.values)
     return xx, x_map
-
-
-# def categorical(row, map_size):
-#     row = np.array([1 if i in row else 0 for i, v in enumerate(np.zeros(map_size))])
-#     return row
-
-# # Function to translate target artist list into discrete integer ids
-# def process_target(col):
-#     # Simplify to 10 artists
-#     col = col.apply(lambda x: x[:10])
-#     # Get all unique values, unpack into a map
-#     y_raw, y_map = process_metadata_list(col)
-
-#     # Convert to dataframe for categorical application
-#     target = pd.DataFrame(y_raw)
-#     target = target.apply(lambda x: categorical(x.values, y_map.size), axis=1)
-
-#     # Output matrix of categorical values
-#     y = np.stack(target.values)
-#     return y_map, y
 
 
 def scaler(X, range):
@@ -281,37 +253,3 @@ def create_target_classes(df):
 
     df['target'] = df.metadata_artist_terms.apply(target_genre)
     return df
-
-
-# # Function to compare model input and output
-# # MOVE TO A NEW MODULE????
-# def target_vocab(data, col, y):
-
-#     # Init count vectorizer
-#     vec = CountVectorizer()
-#     vec.fit_transform(data[col].values)
-
-#     # Create the lookup list ordered correctly by index
-#     terms = np.array(list(vec.vocabulary_.keys()))
-#     indices = np.array(list(vec.vocabulary_.values()))
-#     inverse_vocabulary = terms[np.argsort(indices)]
-
-#     # Get input data and output data
-#     # TODO vectorize this, too slow
-#     for i, v in data[col].iteritems():
-#         source = np.sort(np.char.lower(v))
-#         pred = np.sort(np.array([inverse_vocabulary[i] for i, v in enumerate(y[i]) if v == 1]))
-#         # Get intersection of arrays
-#         matching = np.intersect1d(source, pred)
-
-#         print(matching.shape[0])
-
-
-
-# def set_target(df):
-#     # Compare output of NN artist to this list of artists
-#     rel_cols = ['metadata_songs_song_id','metadata_songs_artist_id','metadata_songs_title','metadata_similar_artists']
-#     relatedDF = df[['metadata_songs_song_id','metadata_songs_title','metadata_similar_artists']]
-#     artist_ids = np.unique(np.concatenate(relatedDF.metadata_similar_artists.to_numpy(), axis=0))
-#     relatedDF['dummies'] = relatedDF.metadata_similar_artists.apply(lambda x: pd.get_dummies(x).values)
-
