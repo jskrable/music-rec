@@ -41,9 +41,9 @@ def deep_nn(X, y, label):
     K.clear_session()
 
     # Globals
-    lr = 0.001
-    epochs = 400
-    batch_size = 20
+    lr = 0.0001
+    epochs = 50
+    batch_size = 50
     OPT = 'adamax'
 
     t = time.time()
@@ -51,11 +51,11 @@ def deep_nn(X, y, label):
     name = '_'.join([OPT, str(epochs), str(batch_size), dt])
 
     # Calculate class weights to improve accuracy 
-    # class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
-    # swm = np.array([class_weights[i] for i in y])
+    class_weights = dict(enumerate(compute_class_weight('balanced', np.unique(y), y)))
+    swm = np.array([class_weights[i] for i in y])
 
     # Convert target to categorical
-    # y = to_categorical(y, num_classes=y.shape[0])
+    y = to_categorical(y, num_classes=len(class_weights))
 
     # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
@@ -98,8 +98,8 @@ def deep_nn(X, y, label):
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
                   # metrics=['accuracy','msle'],
-                  metrics=['accuracy'])
-                  # sample_weight_mode=swm)
+                  metrics=['accuracy'],
+                  sample_weight_mode=swm)
 
     tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name+'.json'),
                               histogram_freq=1,
@@ -129,12 +129,10 @@ def deep_nn(X, y, label):
     # Save weights as h5
     model.save_weights(path + '/weights.h5')
     # Save sample weight mode
-    # np.savetxt(path + '/sample_weights.csv', swm, delimiter=',')
+    np.savetxt(path + '/sample_weights.csv', swm, delimiter=',')
     # Save hyperparams
     with open(path + '/hyperparams.csv', 'w') as file:
         file.write(','.join([str(lr), OPT]))
-    # hyperparams = np.asarray([lr, OPT])
-    # np.savetxt(path + '/hyperparams.csv', hyperparams, delimiter=',')
     print('Model saved to disk')
 
     return model

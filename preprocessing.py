@@ -15,29 +15,15 @@ from collections import Counter
 from sklearn.preprocessing import MinMaxScaler
 
 
-# def normalize_array(arr, scale):
-#     arr = arr.astype(np.float32)
-#     arr *= (scale / np.abs(arr).max())
-#     return arr
-
-
 def max_length(col):
     measurer = np.vectorize(len)
     return measurer(col).max(axis=0) 
+
 
 def min_length(col):
     measurer = np.vectorize(len)
     return measurer(col).min(axis=0) 
 
-
-# # Function to transform string fields into numerical data
-# def bag_of_words(corpus):
-#     vectorizer = CountVectorizer()
-#     x = vectorizer.fit_transform(corpus)
-
-#     # NEED TO RETURN MAPPING FOR Y ALSO
-#     # vectorizer.inverse_transform(x)
-#     return x.toarray()
 
 def target_genre(row):
 
@@ -46,8 +32,6 @@ def target_genre(row):
         c = Counter(row)
         genres = [w for w, c in c.most_common(3)]
     except Exception as e:
-        print(e)
-        print(row)
         genres = ['None']
 
     if any(i for i in genres if i in ['grime','hyphy','hip','hop','rap','crunk','turntablism',
@@ -139,11 +123,15 @@ def target_genre(row):
 def sample_ndarray(row):
     SAMPLE_SIZE = 30
     sample = np.ceil(row.flatten().shape[0]/SAMPLE_SIZE).astype(int)
-    z = []
-    for i,r in enumerate(row):
-        if (i % sample) == 0:
-            z.append(r)
-    return np.concatenate(z).astype(np.float)
+    # z = []
+    # for i,r in enumerate(row):
+    #     if (i % sample) == 0:
+    #         z.append(r)
+    output = np.concatenate([r for i, r in enumerate(row) if i % sample == 0]).astype(np.float)
+    # output = np.concatenate(z).astype(np.float)
+    if output.size != 36:
+        output = np.pad(output, (36 - output.size)//2, 'constant')
+    return output
 
 
 def sample_flat_array(row):
@@ -173,6 +161,7 @@ def process_audio(col):
     else:
         col = col.apply(sample_flat_array)
 
+    print(col.values.shape)
     xx = np.stack(col.values)
     return xx
 
@@ -193,24 +182,24 @@ def process_metadata_list(col):
     return xx, x_map
 
 
-def categorical(row, map_size):
-    row = np.array([1 if i in row else 0 for i, v in enumerate(np.zeros(map_size))])
-    return row
+# def categorical(row, map_size):
+#     row = np.array([1 if i in row else 0 for i, v in enumerate(np.zeros(map_size))])
+#     return row
 
-# Function to translate target artist list into discrete integer ids
-def process_target(col):
-    # Simplify to 10 artists
-    col = col.apply(lambda x: x[:10])
-    # Get all unique values, unpack into a map
-    y_raw, y_map = process_metadata_list(col)
+# # Function to translate target artist list into discrete integer ids
+# def process_target(col):
+#     # Simplify to 10 artists
+#     col = col.apply(lambda x: x[:10])
+#     # Get all unique values, unpack into a map
+#     y_raw, y_map = process_metadata_list(col)
 
-    # Convert to dataframe for categorical application
-    target = pd.DataFrame(y_raw)
-    target = target.apply(lambda x: categorical(x.values, y_map.size), axis=1)
+#     # Convert to dataframe for categorical application
+#     target = pd.DataFrame(y_raw)
+#     target = target.apply(lambda x: categorical(x.values, y_map.size), axis=1)
 
-    # Output matrix of categorical values
-    y = np.stack(target.values)
-    return y_map, y
+#     # Output matrix of categorical values
+#     y = np.stack(target.values)
+#     return y_map, y
 
 
 def scaler(X, range):
@@ -258,7 +247,7 @@ def vectorize(data, label):
         try:
             print('Vectorizing ',col)
             if col == label:
-                y_map, y = process_target(data[col])
+                y_map, y = np.unique(data[col].values, return_inverse=True)
 
             elif data[col].dtype == 'O':
                 if str(type(data[col].iloc[0])) == "<class 'str'>":
@@ -287,6 +276,11 @@ def vectorize(data, label):
 
     return output, y, y_map
 
+
+def create_target_classes(df):
+
+    df['target'] = df.metadata_artist_terms.apply(target_genre)
+    return df
 
 
 # # Function to compare model input and output

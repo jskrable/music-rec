@@ -22,7 +22,7 @@ import kmeans as km
 # Read data from h5 files into dataframe
 ###############################################################################
 t_start = time.time()
-df = read.h5_to_df('./data/MillionSongSubset/data', 8000)
+df = read.h5_to_df('./data/MillionSongSubset/data', 10000)
 t_extract = time.time()
 print('\nGot', len(df.index), 'songs in',
       round((t_extract-t_start), 2), 'seconds.')
@@ -31,7 +31,8 @@ print('\nGot', len(df.index), 'songs in',
 ###############################################################################
 print('Pre-processing extracted song data...')
 df = pp.convert_byte_data(df)
-X, y, y_map = pp.vectorize(df, 'metadata_similar_artists')
+df = pp.create_target_classes(df)
+X, y, y_map = pp.vectorize(df, 'target')
 t_preproc = time.time()
 print('Cleaned and processed', len(df.index), 'rows in',
       round((t_preproc - t_extract), 2), 'seconds.')
@@ -52,6 +53,8 @@ print('Neural network trained in', round((t_nn - t_preproc), 2), 'seconds.')
 clusters = 10
 print('Applying k-Means classifier with', clusters, 'clusters...')
 kmX = km.kmeans(X, clusters)
+print('Complete.')
+print('Training neural network...')
 print('[', kmX.shape[1], '] x [', y.shape[0], ']')
 model_classified = nn.deep_nn(kmX, y, 'hyb')
 t_km = time.time()
