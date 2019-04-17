@@ -6,6 +6,9 @@ utils.py
 jack skrable
 """
 
+import os
+import time
+import datetime
 import numpy as np
 import pandas as pd
 
@@ -28,3 +31,12 @@ def save_lookup_file(df):
 
     pd.read_hdf('./frontend/data/lookup.h5', 'df')
          
+
+def setup_model_dir():
+	t = time.time()
+	dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
+	path = './model/' + dt
+	os.mkdir(path)
+	os.mkdir(path + '/preprocessing')
+
+	return path

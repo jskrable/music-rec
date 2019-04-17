@@ -36,7 +36,7 @@ def set_opt(OPT, lr):
     return opt
 
 
-def deep_nn(X, y, label):
+def deep_nn(X, y, path, label):
 
     K.clear_session()
 
@@ -46,8 +46,8 @@ def deep_nn(X, y, label):
     batch_size = 50
     OPT = 'adamax'
 
-    t = time.time()
-    dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
+    # t = time.time()
+    # dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
     name = '_'.join([OPT, str(epochs), str(batch_size), dt])
 
     # Calculate class weights to improve accuracy 
@@ -118,8 +118,8 @@ def deep_nn(X, y, label):
 
     print('Saving model...')
     # Make directories to save model files
-    path = './model/train/' + dt
-    os.mkdir(path)
+    # path = './model/train/' + dt
+    # os.mkdir(path)
     path += ('/' + label)
     os.mkdir(path)
     # Save model structure json

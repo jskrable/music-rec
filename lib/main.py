@@ -22,20 +22,28 @@ import kmeans as km
 # Read data from h5 files into dataframe
 ###############################################################################
 t_start = time.time()
-df = read.h5_to_df('./data/MillionSongSubset/data', 10000)
+df = read.h5_to_df('../data/MillionSongSubset/data', 200)
 t_extract = time.time()
 print('\nGot', len(df.index), 'songs in',
       round((t_extract-t_start), 2), 'seconds.')
+
+# Setup directory for preprocessing and model storage
+###############################################################################
+path = utils.setup_model_dir()
 
 # Transform data into vectors for processing by neural network
 ###############################################################################
 print('Pre-processing extracted song data...')
 df = pp.convert_byte_data(df)
 df = pp.create_target_classes(df)
-X, y, y_map = pp.vectorize(df, 'target')
+X, y, y_map = pp.vectorize(df, 'target', path)
 t_preproc = time.time()
 print('Cleaned and processed', len(df.index), 'rows in',
       round((t_preproc - t_extract), 2), 'seconds.')
+# TODO create preprocessing folder within run folder
+# Add saved max lengths for metadata list processing 
+# Add saved minmax scaler 
+
 
 # Train neural network
 ###############################################################################
