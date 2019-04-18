@@ -7,9 +7,18 @@ Install dependencies with
 pip install -r requirements.txt
 ```
 
+To get the dataset, you can either run ```setup.sh``` or the following commands
+```
+mkdir data && cd data
+wget http://static.echonest.com/millionsongsubset_full.tar.gz
+tar -xvzf millionsongsubset_full.tar.gz
+```
+Alternatively, visit the Million Song Dataset's site to download the file and unzip it manually.
 
+Training the neural network may take some trial and error based on the hardware available. Running 
+```./lib/main.py``` will attempt to train the network using the full dataset and default hyperparameters.
 
-To standup web app, first run 
+Once the network is trained and a workable model is created, you can run the web app that recommends songs. To standup web app, first run 
 ```
 cd frontend
 python -m http.server
@@ -20,6 +29,6 @@ In another terminal window, run
 ```
 python api/api.py
 ```
-This will host the middleware api endpoints on http://localhost:5000
+This will stand up the middleware api endpoints.
 
 Then visit the static site at http://localhost:8000 and try submitting some songs for recommendation.
