@@ -36,13 +36,13 @@ def set_opt(OPT, lr):
     return opt
 
 
-def deep_nn(X, y, label):
+def deep_nn(X, y, label, path):
 
     K.clear_session()
 
     # Globals
     lr = 0.0001
-    epochs = 40
+    epochs = 100
     batch_size = 50
     OPT = 'adamax'
 
@@ -88,7 +88,6 @@ def deep_nn(X, y, label):
     model.add(Dense(in_size // 10,
                     activation='relu',
                     kernel_regularizer=regularizers.l1(1e-07)))
-
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
 
@@ -117,9 +116,6 @@ def deep_nn(X, y, label):
     print(score)
 
     print('Saving model...')
-    # Make directories to save model files
-    path = './model/train/' + dt
-    os.mkdir(path)
     path += ('/' + label)
     os.mkdir(path)
     # Save model structure json

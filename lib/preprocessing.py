@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+# coding: utf-8
+"""
+preprocessing.py
+02-22-19
+jack skrable
+"""
+
+import re
+import json
+import pandas as pd
+import numpy as np
+import genre_splitter as gs
+from collections import Counter
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.externals import joblib
+
+
+max_list = []
+
+
+def max_length(col):
+    measurer = np.vectorize(len)
+    return measurer(col).max(axis=0) 
+
+
+def min_length(col):
+    measurer = np.vectorize(len)
+    return measurer(col).min(axis=0) 
+
+
+def sample_ndarray(row):
+    SAMPLE_SIZE = 30
+    sample = np.ceil(row.flatten().shape[0]/SAMPLE_SIZE).astype(int)
+    output = np.concatenate([r for i, r in enumerate(row) if i % sample == 0]).astype(np.float)
+    if output.size != 36:
+        output = np.pad(output, (36 - output.size)//2, 'constant')
+    return output
+
+
+def sample_flat_array(row):
+    SAMPLE_SIZE = 28
+    if row.shape[0] <= SAMPLE_SIZE:
+        s = 1
+    else:
+        s = row.shape[0] // SAMPLE_SIZE
+
+    x = [r for i, r in enumerate(row) if i % s == 0]
+
+    if len(x) > SAMPLE_SIZE:
+        mid = len(x) // 2
+        x = x[int(mid-(SAMPLE_SIZE/2)):int(mid+(SAMPLE_SIZE/2))]
+    else:
+        x = np.pad(x, (0, SAMPLE_SIZE - len(x)), 'constant')
+    
+    return np.array(x).astype(np.float)
+
+
+def process_audio(col):
+    dim = len(col.iloc[0].shape)
+    # size = max_length(col)
+
+    if dim > 1:
+        col = col.apply(sample_ndarray)
+    else:
+        col = col.apply(sample_flat_array)
+
+    xx = np.stack(col.values)
+    return xx
+
+
+def lookup_discrete_id(row, m):
+    _, row, _ = np.intersect1d(m, row, assume_unique=True, return_indices=True)
+    return row
+
+
+# Function to vectorize a column made up of numpy arrays containing strings
+def process_metadata_list(col, archive=None):
+    # TODO save this map
+    x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
+    # col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
+    col = col.apply(lambda x: lookup_discrete_id(x, x_map))
+    # Need to save any maxes here
+    max_len = max_length(col)
+    if archive is not None:
+        max_list.append({col.name : int(max_len)})
+    col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
+    xx = np.stack(col.values)
+    return xx, x_map
+
+
+# Need to save this scaler
+def scaler(X, range, archive=None):
+    mms = MinMaxScaler()
+    mms = mms.fit(X)
+    if archive is not None:
+        joblib.dump(mms, archive+'/preprocessing/mms.scaler')
+    return mms.transform(X)
+
+
+# Takes a dataframe full of encoded strings and cleans it
+def convert_byte_data(df):
+
+    print('Cleaning byte data...')
+    obj_df = df.select_dtypes([np.object])
+
+    str_cols = []
+    np_str_cols = []
+    for col in set(obj_df):
+        if isinstance(obj_df[col][0], bytes):
+            str_cols.append(col)
+        elif str(obj_df.metadata_artist_terms[0].dtype)[1] == 'S':
+            np_str_cols.append(col)
+
+    str_df = obj_df[str_cols]
+    str_df = str_df.stack().str.decode('utf-8').unstack()
+    for col in str_df:
+        df[col] = str_df[col]
+
+    np_str_df = obj_df[np_str_cols]
+    for col in np_str_cols:
+        try:
+            print('Cleaning ',col)
+            df[col] = np_str_df[col].apply(lambda x: x.astype('U'))
+        except UnicodeDecodeError as e:
+            print(e)
+
+    return df
+
+
+# Function to vectorize full dataframe 
+def vectorize(data, label, archive=None, predict=False):
+
+    print('Vectorizing dataframe...')
+    output = np.zeros(shape=(len(data),0))
+
+    for col in data:
+        try:
+            print('Vectorizing ',col)
+            if col == label:
+                y_map, y = np.unique(data[col].values, return_inverse=True)
+
+            elif data[col].dtype == 'O':
+                if str(type(data[col].iloc[0])) == "<class 'str'>":
+                    xx = pd.get_dummies(data[col]).values
+                elif col.split('_')[0] == 'metadata':
+                    # MAKE SURE YOU GET
+                    if archive is None:
+                        xx, _ = process_metadata_list(data[col])
+                    else:
+                        xx, _ = process_metadata_list(data[col], archive)
+                else:
+                    xx = process_audio(data[col])
+
+            else:
+                xx = data[col].values[...,None]
+
+            output = np.hstack((output, xx))
+
+        except Exception as e:
+            print(col)
+            print(e)
+
+    if archive is not None:
+        with open(archive + '/preprocessing/max_list.json', 'w') as file:
+            json.dump(max_list, file)
+
+    # CHANGE THIS TO -1, 1??????????
+    # SCALE ONLY ON TRAIN SET?????
+    # THEN SPLIT TO TEST/VALID??
+    output = scaler(output, 1, archive)
+
+    return output, y, y_map
+
+
+def create_target_classes(df):
+
+    print('Calculating overarching genre for labels...')
+    df['target'] = df.metadata_artist_terms.apply(gs.target_genre)
+    return df
+
