@@ -18,6 +18,7 @@ jack skrable
 import numpy as np
 import pandas as pd
 import flask
+from keras.models import load_model
 
 
 # initialize our Flask application and the Keras model

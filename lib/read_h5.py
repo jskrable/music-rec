@@ -77,6 +77,31 @@ def extract_song_data(files):
     return allsongs
 
 
+def get_song_file_map(files):
+
+    # Init empty df
+    songmap = {}
+    # Get total h5 file count
+    size = len(files)
+    print(size, 'files found.')
+    # Iter thru files
+    for i, f in enumerate(files):
+        # Update progress bar
+        progress(i, size, 'of files processed')
+        # Read file into store
+        s_hdf = pd.HDFStore(f)
+        song_id = s_hdf.root.metadata.songs[0]['song_id'].astype('U')
+        filepath = s_hdf.filename
+        songmap.update({song_id: s_hdf.filename})
+        # Close store for reading
+        s_hdf.close()
+
+    with open('./data/song-file-map.json', 'w') as file:
+        json.dump(songmap, file, sort_keys=True, indent=2)
+
+    return songmap
+
+
 def get_user_taste_data(filename):
     tasteDF = pd.read_csv('./TasteProfile/train_triplets_SAMPLE.txt', sep='\t', header=None, names={'user,song,count'})
 

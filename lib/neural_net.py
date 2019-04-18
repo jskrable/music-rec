@@ -36,14 +36,14 @@ def set_opt(OPT, lr):
     return opt
 
 
-def simple_nn(X, y, label):
+def deep_nn(X, y, label, path):
 
     K.clear_session()
 
     # Globals
-    lr = 0.001
-    epochs = 200
-    batch_size = 64
+    lr = 0.0001
+    epochs = 100
+    batch_size = 50
     OPT = 'adamax'
 
     t = time.time()
@@ -55,7 +55,7 @@ def simple_nn(X, y, label):
     swm = np.array([class_weights[i] for i in y])
 
     # Convert target to categorical
-    y = to_categorical(y, num_classes=y.shape[0])
+    y = to_categorical(y, num_classes=len(class_weights))
 
     # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
@@ -65,7 +65,7 @@ def simple_nn(X, y, label):
     # Get input and output layer sizes from input data
     in_size = X_train.shape[1]
     # Modify this when increasing artist list target
-    out_size = y.shape[0]
+    out_size = y.shape[1]
 
     # Initialize the constructor
     model = Sequential()
@@ -83,12 +83,11 @@ def simple_nn(X, y, label):
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 4,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-06)))
+                    kernel_regularizer=regularizers.l1(1e-07)))
     model.add(Dropout(0.1))
     model.add(Dense(in_size // 10,
                     activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-06)))
-
+                    kernel_regularizer=regularizers.l1(1e-07)))
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
 
@@ -97,7 +96,8 @@ def simple_nn(X, y, label):
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=opt,
-                  metrics=['accuracy','msle'],
+                  # metrics=['accuracy','msle'],
+                  metrics=['accuracy'],
                   sample_weight_mode=swm)
 
     tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name+'.json'),
@@ -106,7 +106,9 @@ def simple_nn(X, y, label):
                               write_images=False)                 
 
     print('Training...')    
-    model.fit(X, y, validation_data=(X_valid, y_valid), epochs=epochs, batch_size=batch_size, verbose=1, shuffle=True, callbacks=[tensorboard])
+    model.fit(X_train, y_train, validation_data=(X_valid, y_valid),
+              epochs=epochs, batch_size=batch_size, verbose=1, 
+              shuffle=True, callbacks=[tensorboard])
 
     print('Evaluating...')
     y_pred = model.predict(X_test)
@@ -114,9 +116,6 @@ def simple_nn(X, y, label):
     print(score)
 
     print('Saving model...')
-    # Make directories to save model files
-    path = './model/train/' + dt
-    os.mkdir(path)
     path += ('/' + label)
     os.mkdir(path)
     # Save model structure json
@@ -130,8 +129,6 @@ def simple_nn(X, y, label):
     # Save hyperparams
     with open(path + '/hyperparams.csv', 'w') as file:
         file.write(','.join([str(lr), OPT]))
-    # hyperparams = np.asarray([lr, OPT])
-    # np.savetxt(path + '/hyperparams.csv', hyperparams, delimiter=',')
     print('Model saved to disk')
 
     return model
