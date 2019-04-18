@@ -12,4 +12,5 @@ cd ..
 mkdir model
 mkdir logs
 
-
+# May need sudo here
+chmod +x lib/main.py
