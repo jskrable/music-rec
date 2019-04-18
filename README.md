@@ -7,12 +7,14 @@ Install dependencies with
 pip install -r requirements.txt
 ```
 
+
+
 To standup web app, first run 
 ```
 cd frontend
 python -m http.server
 ```
-This will serve the static site html pages on http://localhost:8000
+This will serve the static site html pages
 
 In another terminal window, run
 ```
@@ -20,3 +22,4 @@ python api/api.py
 ```
 This will host the middleware api endpoints on http://localhost:5000
 
+Then visit the static site at http://localhost:8000 and try submitting some songs for recommendation.
