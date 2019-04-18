@@ -76,6 +76,7 @@ def lookup_discrete_id(row, m):
 
 # Function to vectorize a column made up of numpy arrays containing strings
 def process_metadata_list(col, archive=None):
+    # TODO save this map
     x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
     # col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
     col = col.apply(lambda x: lookup_discrete_id(x, x_map))
@@ -160,8 +161,9 @@ def vectorize(data, label, archive=None, predict=False):
             print(col)
             print(e)
 
-    with open(archive + '/preprocessing/max_list.json', 'w') as file:
-        json.dump(max_list, file)
+    if archive is not None:
+        with open(archive + '/preprocessing/max_list.json', 'w') as file:
+            json.dump(max_list, file)
 
     # CHANGE THIS TO -1, 1??????????
     # SCALE ONLY ON TRAIN SET?????
