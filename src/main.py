@@ -36,19 +36,19 @@ path = utils.setup_model_dir()
 print('Pre-processing extracted song data...')
 df = pp.convert_byte_data(df)
 df = pp.create_target_classes(df)
+# Shuffle
+df = df.iloc[np.random.permutation(len(df))]
+# Transform into NumPy matrix, normalized by column
 X, y, y_map = pp.vectorize(df, 'target', path)
+X, scaler = pp.scaler(X)
 t_preproc = time.time()
 print('Cleaned and processed', len(df.index), 'rows in',
       round((t_preproc - t_extract), 2), 'seconds.')
-# TODO create preprocessing folder within run folder
-# Add saved max lengths for metadata list processing 
-# Add saved minmax scaler 
-
 
 # Train neural network
 ###############################################################################
 print('Training neural network...')
-print('[', X.shape[1], '] x [', y.shape[0], ']')
+print('[', X.shape[1], '] x [', np.unique(y).size, ']')
 model_simple = nn.deep_nn(X, y, 'std', path)
 # nn.deep_nn(X, y)
 t_nn = time.time()
@@ -63,7 +63,7 @@ print('Applying k-Means classifier with', clusters, 'clusters...')
 kmX = km.kmeans(X, clusters)
 print('Complete.')
 print('Training neural network...')
-print('[', kmX.shape[1], '] x [', y.shape[0], ']')
+print('[', kmX.shape[1], '] x [', np.unique(y).size, ']')
 model_classified = nn.deep_nn(kmX, y, 'hyb', path)
 t_km = time.time()
 print('Hybrid k-Means neural network trained in', round((t_km - t_nn), 2), 'seconds.')

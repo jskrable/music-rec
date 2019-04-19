@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 import genre_splitter as gs
 from collections import Counter
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, RobustScaler
 from sklearn.externals import joblib
 
 
@@ -90,12 +90,17 @@ def process_metadata_list(col, archive=None):
 
 
 # Need to save this scaler
-def scaler(X, range, archive=None):
-    mms = MinMaxScaler()
-    mms = mms.fit(X)
+def scaler(X, kind='robust', archive=None):
+    if kind == 'mms':
+        scaler = MinMaxScaler()
+    else:
+        scaler = RobustScaler()
+
+    scaler = scaler.fit(X)
     if archive is not None:
-        joblib.dump(mms, archive+'/preprocessing/mms.scaler')
-    return mms.transform(X)
+        joblib.dump(scaler, archive+'/preprocessing/mms.scaler')
+
+    return scaler.transform(X)
 
 
 # Takes a dataframe full of encoded strings and cleans it
@@ -132,7 +137,7 @@ def convert_byte_data(df):
 def vectorize(data, label, archive=None, predict=False):
 
     print('Vectorizing dataframe...')
-    output = np.zeros(shape=(len(data),0))
+    output = np.zeros(shape=(len(data),1))
 
     for col in data:
         try:
@@ -141,34 +146,31 @@ def vectorize(data, label, archive=None, predict=False):
                 y_map, y = np.unique(data[col].values, return_inverse=True)
 
             elif data[col].dtype == 'O':
-                if str(type(data[col].iloc[0])) == "<class 'str'>":
-                    xx = pd.get_dummies(data[col]).values
+                if type(data[col].iloc[0]) is str:
+                    x_map , xx = np.unique(data[col].values, return_inverse=True)
+                    xx = xx.reshape(-1,1)
                 elif col.split('_')[0] == 'metadata':
-                    # MAKE SURE YOU GET
                     if archive is None:
-                        xx, _ = process_metadata_list(data[col])
+                        xx, x_map = process_metadata_list(data[col])
                     else:
-                        xx, _ = process_metadata_list(data[col], archive)
+                        xx, x_map = process_metadata_list(data[col], archive)
                 else:
                     xx = process_audio(data[col])
 
             else:
                 xx = data[col].values[...,None]
 
+            # Normalize each column    
+            xx = xx / np.linalg.norm(xx)
             output = np.hstack((output, xx))
 
         except Exception as e:
-            print(col)
+            print(xx)
             print(e)
 
     if archive is not None:
         with open(archive + '/preprocessing/max_list.json', 'w') as file:
             json.dump(max_list, file)
-
-    # CHANGE THIS TO -1, 1??????????
-    # SCALE ONLY ON TRAIN SET?????
-    # THEN SPLIT TO TEST/VALID??
-    output = scaler(output, 1, archive)
 
     return output, y, y_map
 

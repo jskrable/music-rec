@@ -13,9 +13,10 @@ import numpy as np
 from sklearn.utils.class_weight import compute_class_weight
 from keras import optimizers 
 from keras import regularizers
+from keras import initializers
 from keras.models import model_from_json
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, Flatten, LeakyReLU, BatchNormalization
 from keras.callbacks import TensorBoard
 from keras.utils import to_categorical
 from keras import backend as K
@@ -24,7 +25,7 @@ from keras import backend as K
 def set_opt(OPT, lr):
     
     if OPT == 'sgd':
-        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.8, 
+        opt = optimizers.SGD(lr=lr, decay=1e-6, momentum=0.9, 
                              nesterov=True)
     elif OPT == 'adam':
         opt = optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999,
@@ -32,19 +33,23 @@ def set_opt(OPT, lr):
     elif OPT == 'adamax':
         opt = optimizers.Adamax(lr=lr, beta_1=0.9, beta_2=0.999,
                                 epsilon=None, decay=0.0)
+    elif OPT == 'adagrad':
+        opt = optimizers.Adagrad(lr=lr, epsilon=None, decay=0.0)
+    elif OPT == 'adadelta':
+        opt = optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=None, decay=0.0)
 
     return opt
 
 
-def deep_nn(X, y, label, path):
+def deep_nn(X, y, label, path=None):
 
     K.clear_session()
 
     # Globals
-    lr = 0.0001
-    epochs = 100
-    batch_size = 50
-    OPT = 'adamax'
+    lr = 0.01
+    epochs = 300
+    batch_size = 52
+    OPT = 'adadelta'
 
     t = time.time()
     dt = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d%H%M%S')
@@ -57,37 +62,51 @@ def deep_nn(X, y, label, path):
     # Convert target to categorical
     y = to_categorical(y, num_classes=len(class_weights))
 
+    # Get input and output layer sizes from input data
+    in_size = X.shape[1]
+
+    # Hyperparams for tweaking
+    hidden_1_size = 400
+    hidden_2_size = 150
+    hidden_3_size = 50
+    # Modify this when increasing artist list target
+    out_size = y.shape[1]
+
     # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
     X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
     y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
 
-    # Get input and output layer sizes from input data
-    in_size = X_train.shape[1]
-    # Modify this when increasing artist list target
-    out_size = y.shape[1]
-
     # Initialize the constructor
     model = Sequential()
 
     # Add an input layer 
-    model.add(Dense(12, activation='relu', input_shape=(in_size,)))
+    model.add(Dense(12, input_shape=(in_size,), activation='relu'))
+                    # kernel_initializer='orthogonal'))
 
-    # Add hidden layers
-    model.add(Dense(in_size // 2,
-                    activation='relu',
-                    # Regularize to reduce overfitting
-                    activity_regularizer=regularizers.l1(1e-08),
-                    kernel_regularizer=regularizers.l1(1e-06)))
-    # Dropout to reduce overfitting
-    model.add(Dropout(0.1))
-    model.add(Dense(in_size // 4,
-                    activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-07)))
-    model.add(Dropout(0.1))
-    model.add(Dense(in_size // 10,
-                    activation='relu',
-                    kernel_regularizer=regularizers.l1(1e-07)))
+    # Add hidden 1
+    model.add(Dense(in_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.3))
+
+    # Add hidden 2
+    model.add(Dense(hidden_2_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.3))
+
+    # Repeat hidden 2
+    model.add(Dense(hidden_2_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.3))
+
+    # Add hidden 3
+    model.add(Dense(hidden_3_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))  
+
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))
 
@@ -105,7 +124,7 @@ def deep_nn(X, y, label, path):
                               write_graph=True,
                               write_images=False)                 
 
-    print('Training...')    
+    print('Training...') 
     model.fit(X_train, y_train, validation_data=(X_valid, y_valid),
               epochs=epochs, batch_size=batch_size, verbose=1, 
               shuffle=True, callbacks=[tensorboard])
