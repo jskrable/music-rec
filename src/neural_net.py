@@ -47,7 +47,7 @@ def deep_nn(X, y, label, path=None):
 
     # Globals
     lr = 0.01
-    epochs = 10000
+    epochs = 5000
     batch_size = 52
     OPT = 'adadelta'
 
@@ -66,9 +66,9 @@ def deep_nn(X, y, label, path=None):
     in_size = X.shape[1]
 
     # Hyperparams for tweaking
-    hidden_1_size = 400
-    hidden_2_size = 150
-    hidden_3_size = 50
+    hidden_1_size = 1024
+    hidden_2_size = 156
+    hidden_3_size = 42
 
     # Modify this when increasing artist list target
     out_size = y.shape[1]
@@ -91,17 +91,29 @@ def deep_nn(X, y, label, path=None):
     model.add(LeakyReLU(alpha=0.3))
     model.add(Dropout(0.05))
 
+    # Add hidden 1
+    model.add(Dense(hidden_1_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.05))
+
     # Add hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    # model.add(Dropout(0.05))
 
     # Repeat hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    # model.add(Dropout(0.05))
+
+    # Repeat hidden 2
+    model.add(Dense(hidden_2_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    # model.add(Dropout(0.05))
 
     # Add hidden 3
     model.add(Dense(hidden_3_size))
