@@ -22,6 +22,15 @@
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="stylesheet" href="css/custom.css">
+  <link rel="stylesheet" href="css/skeleton-alerts.css">
+  <style> 
+    #predict-div {
+      display: none;
+    }
+    #song-limit-alert-div {
+      display: none;
+    }
+  </style>
 
   <!-- Favicon
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -48,7 +57,27 @@
   
     <div class="row">
       <div id="chosen-songs-div">
-          <!-- search terms go here -->
+          <!-- selected songs go here -->
+      </div>
+    </div>
+    
+    <div class="row">
+      <div id="song-limit-alert-div">
+        <p></p>
+        <p class="alert alert-error">Sorry, you can only choose three songs.</p>
+      </div>
+    </div>
+
+    <p></p>
+    <div class="row">
+      <div id="predict-div" class="u-center-block">
+          <!-- selected songs go here -->
+          <div class="six columns u-center-abs">
+            <button id="get-recs-button" class="button-primary" onclick="getRecs()">Get Recommendations</button>
+          </div>
+          <div class="six columns u-center-abs">
+            <button id="clear-selected-button" class="button" onclick="clearSelected()">Clear Selected Songs</button>
+          </div>
       </div>
     </div>
     <div class="row">

@@ -64,10 +64,10 @@ def target_genre(row):
         target = 'metal'
 
     elif any(i for i in genres if i in ['soul']):
-        target = 'jazz'
+        target = 'soul'
 
     elif any(i for i in genres if i in ['jazz','bebop','bop']):
-        target = 'soul'
+        target = 'jazz'
 
     elif any(i for i in genres if i in ['country','bluegrass','americana','heartland']):
         target = 'country'
@@ -76,10 +76,7 @@ def target_genre(row):
         target = 'blues'
 
     elif any(i for i in genres if i in ['alternative','shoegaze','grunge','indie','garage']):
-        target = 'alternative'
-
-    elif any(i for i in genres if i in ['funk','funky']):
-        target = 'funk'    
+        target = 'alternative' 
 
     elif any(i for i in genres if i in ['rock']):
         target = 'rock'
@@ -89,16 +86,6 @@ def target_genre(row):
                                         'africa','african','swedish','german','persian',
                                         'iran','bossa','nova']):
         target = 'world'
-
-    elif any(i for i in genres if i in ['pop']):
-        target = 'pop'
-
-    elif any(i for i in genres if i in ['comedy','funny']):
-        target = 'comedy'
-
-    elif any(i for i in genres if i in ['easy','music','chill','downtempo','meditation',
-                                        'instrumental','quiet']):
-        target = 'muzak'
 
     else:
         target = 'other'
