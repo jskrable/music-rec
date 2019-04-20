@@ -99,7 +99,7 @@ def scaler(X, kind='robust', archive=None):
 
     scaler = scaler.fit(X)
     if archive is not None:
-        joblib.dump(scaler, archive+'/preprocessing/mms.scaler')
+        joblib.dump(scaler, archive+'/preprocessing/'+kind+'.scaler')
 
     return scaler.transform(X)
 
