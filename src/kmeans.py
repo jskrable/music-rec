@@ -16,7 +16,7 @@ def kmeans(X, clusters):
     # Get classes
     classes = kmeans.labels_.reshape(-1,1)
     # Normalize classes
-    classes = classes / np.linalg.norm(classes)
+    classes = classes / (np.linalg.norm(classes) + 0.000000000001)
     # Append to input matrix
     X = np.hstack((X, kmeans.labels_.reshape(-1,1)))
     return X

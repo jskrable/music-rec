@@ -47,7 +47,7 @@ def deep_nn(X, y, label, path=None):
 
     # Globals
     lr = 0.01
-    epochs = 300
+    epochs = 10000
     batch_size = 52
     OPT = 'adadelta'
 
@@ -69,13 +69,14 @@ def deep_nn(X, y, label, path=None):
     hidden_1_size = 400
     hidden_2_size = 150
     hidden_3_size = 50
+
     # Modify this when increasing artist list target
     out_size = y.shape[1]
 
     # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
-    X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
-    y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
+    X_train, X_test, X_valid = np.split(X, [int(.70 * len(X)), int(.85 * len(X))])
+    y_train, y_test, y_valid = np.split(y, [int(.70 * len(y)), int(.85 * len(y))])
 
     # Initialize the constructor
     model = Sequential()
@@ -88,24 +89,24 @@ def deep_nn(X, y, label, path=None):
     model.add(Dense(in_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.05))
 
     # Add hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.05))
 
     # Repeat hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.05))
 
     # Add hidden 3
     model.add(Dense(hidden_3_size))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))  
+    model.add(LeakyReLU(alpha=0.3))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))

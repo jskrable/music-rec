@@ -130,6 +130,8 @@ def convert_byte_data(df):
         except UnicodeDecodeError as e:
             print(e)
 
+    print('Cleaning complete.')
+
     return df
 
 
@@ -161,7 +163,7 @@ def vectorize(data, label, archive=None, predict=False):
                 xx = data[col].values[...,None]
 
             # Normalize each column    
-            xx = xx / np.linalg.norm(xx)
+            xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
             output = np.hstack((output, xx))
 
         except Exception as e:
@@ -172,6 +174,7 @@ def vectorize(data, label, archive=None, predict=False):
         with open(archive + '/preprocessing/max_list.json', 'w') as file:
             json.dump(max_list, file)
 
+    print('Vectorization complete.')
     return output, y, y_map
 
 
