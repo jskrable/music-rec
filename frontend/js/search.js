@@ -1,6 +1,7 @@
 // search.js
 
 search_terms = []
+selected_songs = []
 
 $(function() {
 
@@ -12,7 +13,10 @@ $(function() {
         search_terms.push(value.toLowerCase());
         if (value != "") {
             displaySongs(searchOnType(value));
-            }
+            /*setTimeout(function(){
+				displaySongs(searchOnType(value));
+			}, 2500);*/
+        }
     });
 
 });
@@ -38,7 +42,8 @@ function displaySongs(list) {
 		if (entry.musicbrainz_songs_year != 0) {
 			html += ' (' + entry.musicbrainz_songs_year + ')'
 		}
-		html += '<button id="' + entry.metadata_songs_song_id + '" title="Add ' +
+		html += '<button id="add-' + entry.metadata_songs_song_id + 
+				'" value="' + entry.metadata_songs_title + '" title="Add ' +
 				entry.metadata_songs_title + '" style="float: right;">Add</button>'
 		html += '</p></div>'
 	})
@@ -50,13 +55,41 @@ function displaySongs(list) {
 	// Expand this to pin chosen songs to div above search bar
 	// '#chosen-songs-div'
 	$(":button").on('click', (b) => {
-	    console.log(b.target.id);  
+
+		if (b.target.id.split('-')[0] == 'add') {
+
+			if (selected_songs.length >= 3) {
+				$('#song-limit-alert-div').show()
+				setTimeout(function(){
+					$('#song-limit-alert-div').fadeOut("slow");
+				}, 1500);
+
+			} else {
+			    console.log(b.target.id);
+			    console.log(b.target.value);
+			    $('#predict-div').show();
+		        key = b.target.id.split('-')[1];
+		        title = b.target.value;
+		        selected_songs.push(key);
+
+		        html = '<div class="four columns" id="' + key + 
+		        	   '"><strong>' + title + 
+		        	   '</strong> <a href="#" id="drop-' + key + 
+		        	   '" onclick="closeSong(this)">Remove?</a>'
+		        	   + '</div>'
+
+		        $('#chosen-songs-div').append(html);
+		    }
+	    }
+
 	});
 }
 
 
 // Grabs all song lookup metadata and stores in session storage
 function loadSongs() {
+
+	console.log('Hitting lookup API...')
 
 	// Hit flask API for lookup data
 	fetch('http://localhost:5001/lookup')
@@ -94,4 +127,52 @@ function searchOnType(term) {
 		});
 
 	return filtered
+}
+
+
+function closeSong(song) {
+
+	console.log(song.id)
+    key = song.id.split('-')[1];
+    var index = selected_songs.indexOf(key);
+    if (index > -1) {
+        selected_songs.splice(index, 1);
+        $('#'+key+'').remove()
+    }
+    if (selected_songs.length < 1) {
+        $('#predict-div').hide();
+    }
+}
+
+
+function getRecs() {
+
+	url = 'http://localhost:5001/recommend?songs=' + selected_songs
+
+	console.log('Hitting recommendations API at ' + url)
+	// Hit flask API to get recommendations from model
+	fetch(url)
+		.then(function(response) {
+    		if (response.ok && response.status == 200) {
+    			data = response.json().then(function(data) {
+    				// DO SOMETHING WITH THE RESPONSE
+    				return data;
+    			})
+    		} else {
+    			console.log(response)
+    		}
+    	}, function(error) {
+    		console.log(error)
+    	}
+  		)
+
+}
+
+
+function clearSelected() {
+
+	$('#chosen-songs-div').empty()
+	$('#predict-div').hide()
+	selected_songs = []
+
 }

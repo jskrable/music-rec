@@ -1,0 +1,8 @@
+div.song-container {
+   height: 10em;
+   position: relative }              /* 1 */
+div.song-container p {
+   margin: 0;
+   position: absolute;               /* 2 */
+   top: 50%;                         /* 3 */
+   transform: translate(0, -50%) }   /* 4 */

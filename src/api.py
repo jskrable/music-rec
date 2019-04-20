@@ -6,31 +6,21 @@ api.py
 jack skrable
 """
 
-# USAGE
-# Start the server:
-# 	python api.py
-# Submit a request via cURL:
-# 	curl -X POST -F image=@dog.jpg 'http://localhost:5000/predict'
-# Submita a request via Python:
-#	python simple_request.py
-
-# import the necessary packages
+import os
+import tensorflow as tf
 import numpy as np
 import pandas as pd
 import flask
-from keras.models import load_model
 
+# custom module imports
+# import predict
+import neural_net as nn
 
 # initialize our Flask application and the Keras model
 app = flask.Flask(__name__)
 model = None
-
-def load_model():
-	# load the pre-trained Keras model (here we are using a model
-	# pre-trained on ImageNet and provided by Keras, but you can
-	# substitute in your own networks just as easily)
-	global model
-	model = ResNet50(weights="imagenet")
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 def load_lookups():
 	global lookupDF
@@ -47,28 +37,25 @@ def recommend():
 	# ensure an image was properly uploaded to our endpoint
 	if flask.request.method == "GET":
 		
-		song_id = flask.request.args.get('song')
+		song_id = flask.request.args.get('songs')
 
-			# preprocess the image and prepare it for classification
-			image = prepare_image(image, target=(224, 224))
+			# TODO read and preprocess song here
 
-			# classify the input image and then initialize the list
-			# of predictions to return to the client
-			preds = model.predict(image)
-			results = imagenet_utils.decode_predictions(preds)
-			data["predictions"] = []
-
-			# loop over the results and add them to the list of
-			# returned predictions
-			for (imagenetID, label, prob) in results[0]:
-				r = {"label": label, "probability": float(prob)}
-				data["predictions"].append(r)
+			# # classify the input image and then initialize the list
+			# # of predictions to return to the client
+			# preds = model.predict(image)
+			# results = imagenet_utils.decode_predictions(preds)
+			# data["predictions"] = []
 
 			# indicate that the request was a success
-			data["success"] = True
+		data["success"] = True
 
-	# return the data dictionary as a JSON response
-	return flask.jsonify(data)
+	# JSONify data for response
+	response = flask.jsonify(data)
+	# Allow CORS
+	response.headers.add('Access-Control-Allow-Origin', '*')
+
+	return response
 
 
 @app.route("/lookup", methods=["GET"])
@@ -98,8 +85,9 @@ def lookup():
 if __name__ == "__main__":
 	print(" * Starting Flask server and loading Keras model...")
 	print(" * Please wait until server has fully started")
+
 	# Load my model 
-	# load_model()
+	model = nn.load_model('./model/working/std')
 	# Get songs for lookup function
 	load_lookups()
 
