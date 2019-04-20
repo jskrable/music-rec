@@ -17,6 +17,7 @@ from sklearn.externals import joblib
 
 
 max_list = []
+maps = {}
 
 
 def max_length(col):
@@ -98,7 +99,7 @@ def scaler(X, kind='robust', archive=None):
 
     scaler = scaler.fit(X)
     if archive is not None:
-        joblib.dump(scaler, archive+'/preprocessing/mms.scaler')
+        joblib.dump(scaler, archive+'/preprocessing/'+kind+'.scaler')
 
     return scaler.transform(X)
 
@@ -146,16 +147,18 @@ def vectorize(data, label, archive=None, predict=False):
             print('Vectorizing ',col)
             if col == label:
                 y_map, y = np.unique(data[col].values, return_inverse=True)
-
+                maps.update({col: y_map.tolist()})
             elif data[col].dtype == 'O':
                 if type(data[col].iloc[0]) is str:
                     x_map , xx = np.unique(data[col].values, return_inverse=True)
                     xx = xx.reshape(-1,1)
+                    maps.update({col: x_map.tolist()})
                 elif col.split('_')[0] == 'metadata':
                     if archive is None:
                         xx, x_map = process_metadata_list(data[col])
                     else:
                         xx, x_map = process_metadata_list(data[col], archive)
+                        maps.update({col: x_map.tolist()})
                 else:
                     xx = process_audio(data[col])
 
@@ -166,6 +169,7 @@ def vectorize(data, label, archive=None, predict=False):
             xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
             output = np.hstack((output, xx))
 
+
         except Exception as e:
             print(xx)
             print(e)
@@ -173,6 +177,8 @@ def vectorize(data, label, archive=None, predict=False):
     if archive is not None:
         with open(archive + '/preprocessing/max_list.json', 'w') as file:
             json.dump(max_list, file)
+        with open(archive + '/preprocessing/maps.json', 'w') as file:
+            json.dump(maps, file)
 
     print('Vectorization complete.')
     return output, y, y_map

@@ -7,6 +7,7 @@ jack skrable
 """
 
 import os
+import json
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -15,6 +16,8 @@ import flask
 # custom module imports
 # import predict
 import neural_net as nn
+import read_h5 as read
+import preprocessing as pp
 
 # initialize our Flask application and the Keras model
 app = flask.Flask(__name__)
@@ -24,7 +27,10 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 
 def load_lookups():
 	global lookupDF
+	global song_file_map
 	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
+	with open('./data/song-file-map.json', 'r') as f:
+		song_file_map = json.load(f)
 
 
 
@@ -34,10 +40,22 @@ def recommend():
 	# view
 	data = {"success": False}
 
-	# ensure an image was properly uploaded to our endpoint
+	# GET requests
 	if flask.request.method == "GET":
 		
-		song_id = flask.request.args.get('songs')
+		# Snag query string of song IDs
+		song_ids = flask.request.args.get('songs')
+		song_ids = song_ids.split(',')
+		files = [song_file_map[id] for id in song_ids]
+		df = read.extract_song_data(files)
+		df = pp.convert_byte_data(df)
+		# df = pp.create_target_classes(df)
+
+		print(song_ids)
+		print(files)
+		print(df)
+
+
 
 			# TODO read and preprocess song here
 
