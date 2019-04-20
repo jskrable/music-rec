@@ -15,7 +15,11 @@ from collections import Counter
 from sklearn.preprocessing import MinMaxScaler, RobustScaler
 from sklearn.externals import joblib
 
+# Custom module imports
+import utils
 
+
+# Globals
 max_list = []
 maps = {}
 
@@ -70,24 +74,27 @@ def process_audio(col):
     return xx
 
 
-def lookup_discrete_id(row, m):
-    _, row, _ = np.intersect1d(m, row, assume_unique=True, return_indices=True)
-    return row
-
-
 # Function to vectorize a column made up of numpy arrays containing strings
 def process_metadata_list(col, archive=None):
     # TODO save this map
     x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
-    # col = col.apply(lambda x: re.sub("['\n]", '', np.array2string(x))[1:-1])
     col = col.apply(lambda x: lookup_discrete_id(x, x_map))
-    # Need to save any maxes here
     max_len = max_length(col)
     if archive is not None:
         max_list.append({col.name : int(max_len)})
     col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
     xx = np.stack(col.values)
+
     return xx, x_map
+
+
+def lookup_discrete_id(row, m):
+    _, row, _ = np.intersect1d(m, row, assume_unique=True, return_indices=True)
+
+    if row.size == 0:
+        row = -1
+
+    return row
 
 
 # Need to save this scaler

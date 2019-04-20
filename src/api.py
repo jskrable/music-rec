@@ -28,10 +28,52 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 def load_lookups():
 	global lookupDF
 	global song_file_map
+	global column_maps
+	global max_list
+
 	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
 	with open('./data/song-file-map.json', 'r') as f:
 		song_file_map = json.load(f)
+	with open('./model/working/preprocessing/maps.json', 'r') as f:
+		column_maps = json.load(f)
+	with open('./model/working/preprocessing/max_list.json', 'r') as f:
+		max_list = json.load(f)
 
+
+def process_metadata_list(col):
+    x_map = column_maps[col.name]
+    max_len = max_list[col.name]
+    col = col.apply(lambda x: pp.lookup_discrete_id(x, x_map))
+    col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
+    xx = np.stack(col.values)
+    return xx
+
+
+def preprocess_predictions(df):
+    print('Vectorizing dataframe...')
+    output = np.zeros(shape=(len(df),1))
+
+    for col in df:
+        print('Vectorizing ',col)
+        if df[col].dtype == 'O':
+            if type(df[col].iloc[0]) is str:
+                xx = pp.lookup_discrete_id(df[col], column_maps[col])
+                xx = xx.reshape(-1,1)
+            elif col.split('_')[0] == 'metadf':
+                xx = process_metadata_list(df[col])
+            else:
+                xx = pp.process_audio(df[col])
+
+        else:
+            xx = df[col].values[...,None]
+
+        # Normalize each column    
+        xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
+        print(xx)
+        print(output)
+        output = np.hstack((output, xx))
+
+    return output
 
 
 @app.route("/recommend", methods=["GET"])
@@ -43,29 +85,22 @@ def recommend():
 	# GET requests
 	if flask.request.method == "GET":
 		
+		# Separate this into a new module for prediction preprocssing
 		# Snag query string of song IDs
 		song_ids = flask.request.args.get('songs')
 		song_ids = song_ids.split(',')
+		# Lookup filenames by song id
 		files = [song_file_map[id] for id in song_ids]
+		# Extract raw data from files
 		df = read.extract_song_data(files)
 		df = pp.convert_byte_data(df)
+		# Vectorize
+		X = preprocess_predictions(df)
 		# df = pp.create_target_classes(df)
 
-		print(song_ids)
-		print(files)
 		print(df)
 
-
-
-			# TODO read and preprocess song here
-
-			# # classify the input image and then initialize the list
-			# # of predictions to return to the client
-			# preds = model.predict(image)
-			# results = imagenet_utils.decode_predictions(preds)
-			# data["predictions"] = []
-
-			# indicate that the request was a success
+		# indicate that the request was a success
 		data["success"] = True
 
 	# JSONify data for response
