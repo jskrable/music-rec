@@ -75,23 +75,13 @@ def process_audio(col):
 
 
 # Function to vectorize a column made up of numpy arrays containing strings
-def process_metadata_list(col, archive=None, predict=False):
+def process_metadata_list(col, archive=None):
     # TODO save this map
     x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
     col = col.apply(lambda x: lookup_discrete_id(x, x_map))
-    # Need to save any maxes here
-    if predict is True:
-        x_map = column_maps[col.name]
-        col = col.apply(lambda x: lookup_discrete_id(x, x_map))
-        max_len = max_list[col.name]
-    else:
-        x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
-        col = col.apply(lambda x: lookup_discrete_id(x, x_map))
-        max_len = max_length(col)
-
+    max_len = max_length(col)
     if archive is not None:
         max_list.append({col.name : int(max_len)})
-
     col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
     xx = np.stack(col.values)
 
@@ -103,7 +93,7 @@ def lookup_discrete_id(row, m):
 
     if row.size == 0:
         row = -1
-        
+
     return row
 
 
