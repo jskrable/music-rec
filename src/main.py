@@ -59,8 +59,7 @@ model_simple = nn.deep_nn(X, y, 'std', path)
 # nn.deep_nn(X, y)
 t_nn = time.time()
 print('Neural network trained in', round((t_nn - t_preproc), 2), 'seconds.')
-# Check model
-# utils.model_check(X, y_map, 10, df, model_simple)
+
 
 # Perform k-Means clustering and send classified data through neural network
 ###############################################################################
@@ -74,5 +73,3 @@ model_classified = nn.deep_nn(kmX, y, 'hyb', path)
 t_km = time.time()
 print('Hybrid k-Means neural network trained in',
       round((t_km - t_nn), 2), 'seconds.')
-# Check model
-# utils.model_check(kmX, y_map, 10, df, model_classified)

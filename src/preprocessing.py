@@ -20,7 +20,7 @@ import utils
 
 
 # Globals
-max_list = []
+max_list = {}
 maps = {}
 
 
@@ -76,12 +76,11 @@ def process_audio(col):
 
 # Function to vectorize a column made up of numpy arrays containing strings
 def process_metadata_list(col, archive=None):
-    # TODO save this map
     x_map, _ = np.unique(np.concatenate(col.values, axis=0), return_inverse=True)
     col = col.apply(lambda x: lookup_discrete_id(x, x_map))
     max_len = max_length(col)
     if archive is not None:
-        max_list.append({col.name : int(max_len)})
+        max_list.update({col.name : int(max_len)})
     col = col.apply(lambda x: np.pad(x, (0, max_len - x.shape[0]), 'constant'))
     xx = np.stack(col.values)
 
@@ -143,15 +142,15 @@ def convert_byte_data(df):
 def vectorize(data, label, archive=None, predict=False):
 
     print('Vectorizing dataframe...')
-    output = np.zeros(shape=(len(data),1))
+    # output = np.zeros(shape=(len(data),1))
 
     for col in data:
-        try:
-            print('Vectorizing ',col)
-            if col == label:
-                y_map, y = np.unique(data[col].values, return_inverse=True)
-                maps.update({col: y_map.tolist()})
-            elif data[col].dtype == 'O':
+        print('Vectorizing ',col) 
+        if col == label:
+            y_map, y = np.unique(data[col].values, return_inverse=True)
+            maps.update({col: y_map.tolist()})
+        else:        
+            if data[col].dtype == 'O':
                 if type(data[col].iloc[0]) is str:
                     x_map , xx = np.unique(data[col].values, return_inverse=True)
                     xx = xx.reshape(-1,1)
@@ -164,17 +163,16 @@ def vectorize(data, label, archive=None, predict=False):
                         maps.update({col: x_map.tolist()})
                 else:
                     xx = process_audio(data[col])
-
             else:
                 xx = data[col].values[...,None]
 
+            # if xx.shape[0] == len(data):
             # Normalize each column    
             xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
-            output = np.hstack((output, xx))
-
-
-        except Exception as e:
-            print(e)
+            try:
+                output = np.hstack((output, xx))
+            except NameError:
+                output = xx
 
     if archive is not None:
         with open(archive + '/preprocessing/max_list.json', 'w') as file:
