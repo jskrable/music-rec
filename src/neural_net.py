@@ -68,7 +68,7 @@ def deep_nn(X, y, label, path=None):
     # Hyperparams for tweaking
     hidden_1_size = 1024
     hidden_2_size = 156
-    hidden_3_size = 42
+    hidden_3_size = 20
 
     # Modify this when increasing artist list target
     out_size = y.shape[1]
@@ -193,7 +193,7 @@ def load_model(path):
     # Compile the loaded model
     model.compile(loss='categorical_crossentropy',
               optimizer=opt,
-              metrics=['accuracy','msle'],
+              metrics=['accuracy'],
               sample_weight_mode=swm)
 
     return model

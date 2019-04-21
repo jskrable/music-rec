@@ -30,6 +30,9 @@
     #song-limit-alert-div {
       display: none;
     }
+    #recs-container {
+      display: none;
+    }
   </style>
 
   <!-- Favicon
@@ -46,7 +49,7 @@
 
   <!-- Primary Page Layout
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-  <div class="container">
+  <div id="search-container" class="container">
     <div class="row">
       <div class="full column" style="margin-top: 10%">
         <h4>Welcome to the Music Recommender</h4>
@@ -70,12 +73,12 @@
 
     <p></p>
     <div class="row">
-      <div id="predict-div" class="u-center-block">
+      <div id="predict-div" class="twelve columns">
           <!-- selected songs go here -->
-          <div class="six columns u-center-abs">
+          <div class="four columns offset-by-two">
             <button id="get-recs-button" class="button-primary" onclick="getRecs()">Get Recommendations</button>
           </div>
-          <div class="six columns u-center-abs">
+          <div class="four columns offset-by-one">
             <button id="clear-selected-button" class="button" onclick="clearSelected()">Clear Selected Songs</button>
           </div>
       </div>
@@ -95,23 +98,23 @@
       </ul>
     </div>
 
-<!-- 
-    <table class="u-full-width">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Artist</th>
-          <th>Album</th>
-          <th>Year</th>
-        </tr>
-      </thead>
-      <tbody id="search-results">
+  </div>
 
-      </tbody>
-    </table> -->
-
-
-
+  <div class="container" id="recs-container">
+    <div class="row">
+      <div class="full column" style="margin-top: 10%">
+        <h4>You might like:</h4>
+      </div>
+    </div>
+    <div class="row">
+      <div id="recs-div">
+          <!-- recomme songs go here -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="four columns offset-by-one">
+        <button id="back-button" class="button" onclick="restart()">Try Again</button>
+      </div>
   </div>
 
 <!-- End Document

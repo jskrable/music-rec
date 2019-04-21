@@ -12,6 +12,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import flask
+from sklearn.externals import joblib
 
 # custom module imports
 # import predict
@@ -31,9 +32,12 @@ def load_model():
 	global column_maps
 	global max_list
 	global model
+	global scaler
+	global graph
 
 	# Load model 
 	model = nn.load_model('./model/working/std')
+	graph = tf.get_default_graph()
 
 	# Load preprocessing dependencies
 	with open('./data/song-file-map.json', 'r') as f:
@@ -42,6 +46,8 @@ def load_model():
 		column_maps = json.load(f)
 	with open('./model/working/preprocessing/max_list.json', 'r') as f:
 		max_list = json.load(f)
+
+	scaler = joblib.load('./model/working/preprocessing/robust.scaler')
 
 	# Load song ID lookup for frontend
 	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
@@ -58,8 +64,6 @@ def process_metadata_list(col):
 
 def preprocess_predictions(df):
     print('Vectorizing dataframe...')
-    output = np.zeros(shape=(len(df),1))
-
     for col in df:
         if df[col].dtype == 'O':
             if type(df[col].iloc[0]) is str:
@@ -75,9 +79,12 @@ def preprocess_predictions(df):
 
         # Normalize each column    
         xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
-        print(col,'shape',xx.shape)
-        output = np.hstack((output, xx))
-        print('output shape', output.shape)
+        # print(col,'shape',xx.shape)
+        try:
+        	output = np.hstack((output, xx))
+        except NameError:
+        	output = xx
+        # print('output shape', output.shape)
 
     return output
 
@@ -100,16 +107,18 @@ def recommend():
 		# Extract raw data from files
 		df = read.extract_song_data(files)
 		df = pp.convert_byte_data(df)
+		df = df.fillna(0)
 		# Vectorize
 		X = preprocess_predictions(df)
-		# df = pp.create_target_classes(df)
+		# Get saved scaler
+		X = scaler.transform(X)
+		print('Model predicting...')
+		with graph.as_default():
+			predictions = model.predict(X)
 
-		# TODO get saved scaler
-		X = pp.scaler(X)
-		print(X)
-
-		
-		predictions = model.predict(X)
+		classes = [column_maps['target'][i.argmax()] for i in predictions]	
+		print(classes)
+		data['entity'] = classes
 
 		# indicate that the request was a success
 		data["success"] = True
