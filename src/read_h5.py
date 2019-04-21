@@ -38,7 +38,7 @@ def get_all_files(basedir, ext='.h5'):
 # From a list of h5 files, extracts song metadata and creates a dataframe
 def extract_song_data(files):
     # Init empty df
-    allsongs = pd.DataFrame()
+    df = pd.DataFrame()
     # Get total h5 file count
     size = len(files)
     print(size, 'files found.')
@@ -70,11 +70,15 @@ def extract_song_data(files):
                             print(e)
 
         # Append to main df
-        allsongs = allsongs.append(data, ignore_index=True)
+        df = df.append(data, ignore_index=True)
         # Close store for reading
         s_hdf.close()
 
-    df = allsongs[['metadata_songs_artist_id','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_segments_pitches','analysis_songs_tempo','analysis_bars_confidence','analysis_bars_start','analysis_beats_confidence','analysis_beats_start','analysis_songs_duration','analysis_songs_energy','analysis_songs_key','analysis_songs_key_confidence','analysis_songs_time_signature','analysis_songs_time_signature_confidence','metadata_similar_artists']]
+    # Dev set of columns
+    # df = df[['metadata_songs_artist_id','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_segments_pitches','analysis_songs_tempo','analysis_bars_confidence','analysis_bars_start','analysis_beats_confidence','analysis_beats_start','analysis_songs_duration','analysis_songs_energy','analysis_songs_key','analysis_songs_key_confidence','analysis_songs_time_signature','analysis_songs_time_signature_confidence','metadata_similar_artists']]
+
+    df.drop(['musicbrainz_artist_mbtags_count','musicbrainz_artist_mbtags',
+             'musicbrainz_songs_idx_artist_mbtags'], inplace=True, axis=1)
 
     return df
 

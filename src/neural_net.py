@@ -82,43 +82,50 @@ def deep_nn(X, y, label, path=None):
     model = Sequential()
 
     # Add an input layer 
-    model.add(Dense(12, input_shape=(in_size,), activation='relu'))
-                    # kernel_initializer='orthogonal'))
+    model.add(Dense(12, input_shape=(in_size,), activation='relu',
+                    kernel_initializer='orthogonal'))
 
     # Add hidden 1
     model.add(Dense(in_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    model.add(Dropout(0.2))
 
     # Add hidden 1
     model.add(Dense(hidden_1_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    model.add(Dropout(0.2))
+
+    # Repeat hidden 1
+    model.add(Dense(hidden_1_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.1))
 
     # Add hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    # model.add(Dropout(0.05))
+    model.add(Dropout(0.1))
 
     # Repeat hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    # model.add(Dropout(0.05))
+    model.add(Dropout(0.05))
 
     # Repeat hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
-    # model.add(Dropout(0.05))
+    model.add(Dropout(0.05))
 
     # Add hidden 3
     model.add(Dense(hidden_3_size))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.05))
 
     # Add an output layer 
     model.add(Dense(out_size, activation='softmax'))

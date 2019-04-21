@@ -90,10 +90,6 @@ def process_metadata_list(col, archive=None):
 
 def lookup_discrete_id(row, m):
     _, row, _ = np.intersect1d(m, row, assume_unique=True, return_indices=True)
-
-    if row.size == 0:
-        row = -1
-
     return row
 
 
@@ -178,7 +174,6 @@ def vectorize(data, label, archive=None, predict=False):
 
 
         except Exception as e:
-            print(xx)
             print(e)
 
     if archive is not None:

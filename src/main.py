@@ -22,7 +22,7 @@ import kmeans as km
 # Read data from h5 files into dataframe
 ###############################################################################
 t_start = time.time()
-df = read.h5_to_df('./data/MillionSongSubset/data', 100)
+df = read.h5_to_df('./data/MillionSongSubset/data', 10000)
 t_extract = time.time()
 print('\nGot', len(df.index), 'songs in',
       round((t_extract-t_start), 2), 'seconds.')
@@ -44,7 +44,7 @@ df = df.fillna(0)
 X, y, y_map = pp.vectorize(df, 'target', path)
 print('Check a record pre scaling:')
 print(X[0][:5])
-X = pp.scaler(X)
+X = pp.scaler(X, 'robust', path)
 print('Check a record post scaling:')
 print(X[0][:5])
 t_preproc = time.time()
