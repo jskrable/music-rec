@@ -25,19 +25,26 @@ model = None
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)
 
-def load_lookups():
+def load_model():
 	global lookupDF
 	global song_file_map
 	global column_maps
 	global max_list
+	global model
 
-	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
+	# Load model 
+	model = nn.load_model('./model/working/std')
+
+	# Load preprocessing dependencies
 	with open('./data/song-file-map.json', 'r') as f:
 		song_file_map = json.load(f)
 	with open('./model/working/preprocessing/maps.json', 'r') as f:
 		column_maps = json.load(f)
 	with open('./model/working/preprocessing/max_list.json', 'r') as f:
 		max_list = json.load(f)
+
+	# Load song ID lookup for frontend
+	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
 
 
 def process_metadata_list(col):
@@ -54,12 +61,11 @@ def preprocess_predictions(df):
     output = np.zeros(shape=(len(df),1))
 
     for col in df:
-        print('Vectorizing ',col)
         if df[col].dtype == 'O':
             if type(df[col].iloc[0]) is str:
                 xx = pp.lookup_discrete_id(df[col], column_maps[col])
                 xx = xx.reshape(-1,1)
-            elif col.split('_')[0] == 'metadf':
+            elif col.split('_')[0] == 'metadata':
                 xx = process_metadata_list(df[col])
             else:
                 xx = pp.process_audio(df[col])
@@ -69,9 +75,9 @@ def preprocess_predictions(df):
 
         # Normalize each column    
         xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
-        print(xx)
-        print(output)
+        print(col,'shape',xx.shape)
         output = np.hstack((output, xx))
+        print('output shape', output.shape)
 
     return output
 
@@ -98,7 +104,12 @@ def recommend():
 		X = preprocess_predictions(df)
 		# df = pp.create_target_classes(df)
 
-		print(df)
+		# TODO get saved scaler
+		X = pp.scaler(X)
+		print(X)
+
+		
+		predictions = model.predict(X)
 
 		# indicate that the request was a success
 		data["success"] = True
@@ -139,10 +150,8 @@ if __name__ == "__main__":
 	print(" * Starting Flask server and loading Keras model...")
 	print(" * Please wait until server has fully started")
 
-	# Load my model 
-	model = nn.load_model('./model/working/std')
-	# Get songs for lookup function
-	load_lookups()
+	# Load model and dependencies
+	load_model()
 
 	print(' * Server is active')
 	# Run app
