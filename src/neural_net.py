@@ -115,11 +115,11 @@ def deep_nn(X, y, label, path=None):
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.2))
 
-    # # Repeat hidden 2
-    # model.add(Dense(hidden_2_size))
-    # model.add(BatchNormalization())
-    # model.add(LeakyReLU(alpha=0.3))
-    # # model.add(Dropout(0.05))
+    # Repeat hidden 2
+    model.add(Dense(hidden_2_size))
+    model.add(BatchNormalization())
+    model.add(LeakyReLU(alpha=0.3))
+    model.add(Dropout(0.1))
 
     # Add hidden 3
     model.add(Dense(hidden_3_size))

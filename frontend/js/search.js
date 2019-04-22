@@ -89,16 +89,25 @@ function displaySongs(list) {
 // Pushes song list to page for display
 function displayRecs(data) {
 
-	console.log(data)
+	//console.log(data)
 
 	// Init vars
 	html = ''
-	list = data.entity
+	list = data.entity.recommendations
 
 	// Loop thru list and add each song
 	list.forEach(function(entry) {
-		html += '<div>' +
-				'<p><b>' + entry + '</b></p></div>'
+        html += '<div>'
+        html += '<p><b>' + entry.metadata_songs_title + '</b> by ' +
+                entry.metadata_songs_artist_name + ' '
+        if (entry.musicbrainz_songs_year != 0) {
+            html += '(' + entry.musicbrainz_songs_year + ') '
+        }
+        html += '<a href=https://www.google.com/search?q="'
+        query = [entry.metadata_songs_title, entry.metadata_songs_artist_name]
+                    .join(' ').toLowerCase().split(' ').join('+')
+        html += query + '" target="_blank">Listen</a>'
+        html += '</p></div>'
 	})
 
 	// Push html

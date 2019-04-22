@@ -26,31 +26,36 @@ model = None
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)
 
+
 def load_model():
-	global lookupDF
-	global song_file_map
-	global column_maps
-	global max_list
-	global model
-	global scaler
-	global graph
+    global lookupDF
+    global song_file_map
+    global column_maps
+    global max_list
+    global model
+    global scaler
+    global graph
+    global probDF
 
-	# Load model 
-	model = nn.load_model('./model/working/std')
-	graph = tf.get_default_graph()
+    # Load model
+    model = nn.load_model('./model/working/std')
+    graph = tf.get_default_graph()
 
-	# Load preprocessing dependencies
-	with open('./data/song-file-map.json', 'r') as f:
-		song_file_map = json.load(f)
-	with open('./model/working/preprocessing/maps.json', 'r') as f:
-		column_maps = json.load(f)
-	with open('./model/working/preprocessing/max_list.json', 'r') as f:
-		max_list = json.load(f)
+    # Load preprocessing dependencies
+    with open('./data/song-file-map.json', 'r') as f:
+        song_file_map = json.load(f)
+    with open('./model/working/preprocessing/maps.json', 'r') as f:
+        column_maps = json.load(f)
+    with open('./model/working/preprocessing/max_list.json', 'r') as f:
+        max_list = json.load(f)
 
-	scaler = joblib.load('./model/working/preprocessing/robust.scaler')
+    scaler = joblib.load('./model/working/preprocessing/robust.scaler')
 
-	# Load song ID lookup for frontend
-	lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
+    # Load song ID lookup for frontend
+    lookupDF = pd.read_hdf('./frontend/data/lookup.h5', 'df')
+
+    # Model predictions for comparison
+    probDF = pd.read_pickle('./data/model_prob.pkl')
 
 
 def process_metadata_list(col):
@@ -68,22 +73,22 @@ def preprocess_predictions(df):
         if df[col].dtype == 'O':
             if type(df[col].iloc[0]) is str:
                 xx = pp.lookup_discrete_id(df[col], column_maps[col])
-                xx = xx.reshape(-1,1)
+                xx = xx.reshape(-1, 1)
             elif col.split('_')[0] == 'metadata':
                 xx = process_metadata_list(df[col])
             else:
                 xx = pp.process_audio(df[col])
 
         else:
-            xx = df[col].values[...,None]
+            xx = df[col].values[..., None]
 
-        # Normalize each column    
+        # Normalize each column
         xx = xx / (np.linalg.norm(xx) + 0.00000000000001)
         # print(col,'shape',xx.shape)
         try:
-        	output = np.hstack((output, xx))
+            output = np.hstack((output, xx))
         except NameError:
-        	output = xx
+            output = xx
         # print('output shape', output.shape)
 
     return output
@@ -91,77 +96,98 @@ def preprocess_predictions(df):
 
 @app.route("/recommend", methods=["GET"])
 def recommend():
-	# initialize the data dictionary that will be returned from the
-	# view
-	data = {"success": False}
+        # initialize the data dictionary that will be returned from the
+        # view
+    data = {"success": False}
 
-	# GET requests
-	if flask.request.method == "GET":
-		
-		# Separate this into a new module for prediction preprocssing
-		# Snag query string of song IDs
-		song_ids = flask.request.args.get('songs')
-		song_ids = song_ids.split(',')
-		# Lookup filenames by song id
-		files = [song_file_map[id] for id in song_ids]
-		# Extract raw data from files
-		df = read.extract_song_data(files)
-		df = pp.convert_byte_data(df)
-		df = df.fillna(0)
-		# Vectorize
-		X = preprocess_predictions(df)
-		# Get saved scaler
-		X = scaler.transform(X)
-		print('Model predicting...')
-		with graph.as_default():
-			predictions = model.predict(X)
+    # GET requests
+    if flask.request.method == "GET":
 
-		classes = [column_maps['target'][i.argmax()] for i in predictions]	
-		print(classes)
-		data['entity'] = classes
+            # Separate this into a new module for prediction preprocssing
+            # Snag query string of song IDs
+        song_ids = flask.request.args.get('songs')
+        song_ids = song_ids.split(',')
+        # Lookup filenames by song id
+        files = [song_file_map[id] for id in song_ids]
+        # Extract raw data from files
+        df = read.extract_song_data(files)
+        df = pp.convert_byte_data(df)
+        df = df.fillna(0)
+        # Vectorize
+        X = preprocess_predictions(df)
+        # Get saved scaler
+        # X = scaler.transform(X)
+        print('Model predicting...')
+        with graph.as_default():
+            predictions = model.predict(X)
 
-		# indicate that the request was a success
-		data["success"] = True
+        classes = [column_maps['target'][i.argmax()] for i in predictions]
+        print(classes)
 
-	# JSONify data for response
-	response = flask.jsonify(data)
-	# Allow CORS
-	response.headers.add('Access-Control-Allow-Origin', '*')
+    model_prob = probDF[probDF.columns[:-1]].values
 
-	return response
+    # TODO fix this, always returning same song
+    # rec_ids = [probDF.iloc[np.argmin(
+    #                        np.min(
+    #                            np.sqrt((pred - model_prob)**2)))].id
+    #            for pred in predictions]
+    rec_ids = [probDF.iloc[np.ceil(
+                           np.argmin(
+                           np.sqrt(
+                               (pred - model_prob)**2)) / 18).astype(int)].id
+                for pred in predictions]
+
+    recs = lookupDF.loc[lookupDF.metadata_songs_song_id.isin(
+        rec_ids)].to_dict('records')
+
+    print(recs)
+
+    data['entity'] = {'classes': classes}
+    data['entity'].update({'recommendations': recs})
+
+    # indicate that the request was a success
+    data["success"] = True
+
+    # JSONify data for response
+    response = flask.jsonify(data)
+    # Allow CORS
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 
 @app.route("/lookup", methods=["GET"])
 def lookup():
-	# initialize the data dictionary that will be returned from the
-	# view
-	data = {"success": False}
+    # initialize the data dictionary that will be returned from the
+    # view
+    data = {"success": False}
 
-	# ensure an image was properly uploaded to our endpoint
-	if flask.request.method == "GET":
-		
-		# Get lookup data here		
-		data['entity'] = lookupDF.to_dict('records')
+    # ensure an image was properly uploaded to our endpoint
+    if flask.request.method == "GET":
 
-		# indicate that the request was a success
-		data["success"] = True
+        # Get lookup data here
+        data['entity'] = lookupDF.to_dict('records')
 
-	# JSONify data for response
-	response = flask.jsonify(data)
-	# Allow CORS
-	response.headers.add('Access-Control-Allow-Origin', '*')
+        # indicate that the request was a success
+        data["success"] = True
 
-	return response
+    # JSONify data for response
+    response = flask.jsonify(data)
+    # Allow CORS
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
+
 
 # if this is the main thread of execution first load the model and
 # then start the server
 if __name__ == "__main__":
-	print(" * Starting Flask server and loading Keras model...")
-	print(" * Please wait until server has fully started")
+    print(" * Starting Flask server and loading Keras model...")
+    print(" * Please wait until server has fully started")
 
-	# Load model and dependencies
-	load_model()
+    # Load model and dependencies
+    load_model()
 
-	print(' * Server is active')
-	# Run app
-	app.run(host='0.0.0.0', port=5001)
+    print(' * Server is active')
+    # Run app
+    app.run(host='0.0.0.0', port=5001)
