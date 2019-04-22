@@ -86,6 +86,39 @@ function displaySongs(list) {
 }
 
 
+// Pushes song list to page for display
+function displayRecs(data) {
+
+	console.log(data)
+
+	// Init vars
+	html = ''
+	list = data.entity
+
+	// Loop thru list and add each song
+	list.forEach(function(entry) {
+		html += '<div>' +
+				'<p><b>' + entry + '</b></p></div>'
+	})
+
+	// Push html
+	$('#recs-div').append(html)
+	$('#search-container').hide()
+	$('#recs-container').show()
+
+
+}
+
+
+function restart() {
+
+	$('#recs-div').empty()
+	$('#search-container').show()
+	$('#recs-container').hide()	
+	clearSelected()
+	$('#search-bar').val('')
+}
+
 // Grabs all song lookup metadata and stores in session storage
 function loadSongs() {
 
@@ -155,7 +188,7 @@ function getRecs() {
 		.then(function(response) {
     		if (response.ok && response.status == 200) {
     			data = response.json().then(function(data) {
-    				// DO SOMETHING WITH THE RESPONSE
+    				displayRecs(data);
     				return data;
     			})
     		} else {

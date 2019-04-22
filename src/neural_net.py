@@ -195,7 +195,7 @@ def load_model(path):
     # Compile the loaded model
     model.compile(loss='categorical_crossentropy',
               optimizer=opt,
-              metrics=['accuracy','msle'],
+              metrics=['accuracy'],
               sample_weight_mode=swm)
 
     return model
