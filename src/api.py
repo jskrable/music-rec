@@ -131,10 +131,7 @@ def recommend():
     #                        np.min(
     #                            np.sqrt((pred - model_prob)**2)))].id
     #            for pred in predictions]
-    rec_ids = [probDF.iloc[np.ceil(
-                           np.argmin(
-                           np.sqrt(
-                               (pred - model_prob)**2)) / 18).astype(int)].id
+    rec_ids = [probDF.iloc[np.argmin(np.min(np.sqrt((pred - model_prob)**2),axis=1))].id
                 for pred in predictions]
 
     recs = lookupDF.loc[lookupDF.metadata_songs_song_id.isin(

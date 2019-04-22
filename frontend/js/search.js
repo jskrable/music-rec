@@ -103,7 +103,7 @@ function displayRecs(data) {
         if (entry.musicbrainz_songs_year != 0) {
             html += '(' + entry.musicbrainz_songs_year + ') '
         }
-        html += '<a href=https://www.google.com/search?q="'
+        html += '<a href="https://www.google.com/search?q='
         query = [entry.metadata_songs_title, entry.metadata_songs_artist_name]
                     .join(' ').toLowerCase().split(' ').join('+')
         html += query + '" target="_blank">Listen</a>'

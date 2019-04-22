@@ -45,11 +45,6 @@ for i in range(5):
 df = df.fillna(0)
 # Transform into NumPy matrix, normalized by column
 X, y, y_map = pp.vectorize(df, 'target', path)
-print('Check a record pre scaling:')
-print(X[0][:5])
-X = pp.scaler(X, 'robust', path)
-print('Check a record post scaling:')
-print(X[0][:5])
 t_preproc = time.time()
 print('Cleaned and processed', len(df.index), 'rows in',
       round((t_preproc - t_extract), 2), 'seconds.')
@@ -63,6 +58,9 @@ model_simple = nn.deep_nn(pp.scaler(X, 'robust', path), y, 'std', path)
 t_nn = time.time()
 print('Neural network trained in', round((t_nn - t_preproc), 2), 'seconds.')
 
+print('Evaluating model and saving class probabilities...')
+predDF = pd.DataFrame.from_records(model_simple.predict(pp.scaler(X, 'robust'))
+predDF.to_pickle('./data/model_prob.pkl')
 
 # Perform k-Means clustering and send classified data through neural network
 ###############################################################################
