@@ -7,6 +7,7 @@ jack skrable
 """
 
 import os
+import argparse
 import time
 import datetime
 import numpy as np
@@ -40,3 +41,19 @@ def setup_model_dir():
 	os.mkdir(path + '/preprocessing')
 
 	return path
+
+
+def arg_parser():
+    # function to parse arguments sent to CLI
+    # setup argument parsing with description and -h method
+    parser = argparse.ArgumentParser(
+        description='Music recommendation engine using a neural network')
+    # add size int
+    parser.add_argument('-s', '--size', default=10000, type=int, nargs='?',
+                        help='the number of files to use for training')
+    # add iterations int
+    parser.add_argument('-i', '--initialize', default=False, type=bool, nargs='?',
+                        help='flag to run initial setup for web app')
+    # parse args and return
+    args = parser.parse_args()
+    return args

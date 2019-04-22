@@ -77,6 +77,7 @@ def extract_song_data(files):
     # Dev set of columns
     # df = df[['metadata_songs_artist_id','metadata_songs_title','musicbrainz_songs_year','metadata_artist_terms','analysis_songs_analysis_sample_rate','metadata_songs_artist_location','analysis_sections_confidence','analysis_sections_start','analysis_segments_start','analysis_segments_timbre','analysis_segments_pitches','analysis_songs_tempo','analysis_bars_confidence','analysis_bars_start','analysis_beats_confidence','analysis_beats_start','analysis_songs_duration','analysis_songs_energy','analysis_songs_key','analysis_songs_key_confidence','analysis_songs_time_signature','analysis_songs_time_signature_confidence','metadata_similar_artists']]
 
+    # Drop bad columns
     df.drop(['musicbrainz_artist_mbtags_count','musicbrainz_artist_mbtags',
              'musicbrainz_songs_idx_artist_mbtags'], inplace=True, axis=1)
 
@@ -115,8 +116,11 @@ def get_user_taste_data(filename):
 
 
 # Function to read all h5 files in a directory into a dataframe
-def h5_to_df(basedir, limit=None):
+def h5_to_df(basedir, limit=None, init=False):
     files = get_all_files(basedir, '.h5')
     files = files if limit is None else files[:limit]
     df = extract_song_data(files)
+
+    if init:
+        get_song_file_map(files)
     return df

@@ -16,7 +16,7 @@ from keras import regularizers
 from keras import initializers
 from keras.models import model_from_json
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, LeakyReLU, BatchNormalization
+from keras.layers import Dense, Dropout, Flatten, LeakyReLU, BatchNormalization, Activation, Softmax
 from keras.callbacks import TensorBoard
 from keras.utils import to_categorical
 from keras import backend as K
@@ -46,8 +46,8 @@ def deep_nn(X, y, label, path=None):
     K.clear_session()
 
     # Globals
-    lr = 0.01
-    epochs = 5000
+    lr = 0.0001
+    epochs = 1000
     batch_size = 52
     OPT = 'adadelta'
 
@@ -66,9 +66,9 @@ def deep_nn(X, y, label, path=None):
     in_size = X.shape[1]
 
     # Hyperparams for tweaking
-    hidden_1_size = 1024
-    hidden_2_size = 156
-    hidden_3_size = 20
+    hidden_1_size = 512
+    hidden_2_size = 148
+    hidden_3_size = 52
 
     # Modify this when increasing artist list target
     out_size = y.shape[1]
@@ -82,53 +82,55 @@ def deep_nn(X, y, label, path=None):
     model = Sequential()
 
     # Add an input layer 
-    model.add(Dense(12, input_shape=(in_size,), activation='relu',
-                    kernel_initializer='orthogonal'))
+    model.add(Dense(12, input_shape=(in_size,), activation='relu'))
+                    # kernel_initializer='orthogonal'))
 
     # Add hidden 1
     model.add(Dense(in_size))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
+    model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.2))
 
-    # Add hidden 1
-    model.add(Dense(hidden_1_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.2))
+    # # Add hidden 1
+    # model.add(Dense(hidden_1_size))
+    # model.add(BatchNormalization())
+    # model.add(LeakyReLU(alpha=0.3))
+    # model.add(Dropout(0.2))
 
-    # Repeat hidden 1
-    model.add(Dense(hidden_1_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.1))
+    # # Repeat hidden 1
+    # model.add(Dense(hidden_1_size))
+    # model.add(BatchNormalization())
+    # model.add(LeakyReLU(alpha=0.2))
+    # model.add(Dropout(0.5))
 
     # Add hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.1))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.2))
 
     # Repeat hidden 2
     model.add(Dense(hidden_2_size))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.2))
 
-    # Repeat hidden 2
-    model.add(Dense(hidden_2_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    # # Repeat hidden 2
+    # model.add(Dense(hidden_2_size))
+    # model.add(BatchNormalization())
+    # model.add(LeakyReLU(alpha=0.3))
+    # # model.add(Dropout(0.05))
 
     # Add hidden 3
     model.add(Dense(hidden_3_size))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.05))
+    model.add(LeakyReLU(alpha=0.2))
+    # model.add(Dropout(0.05))
 
     # Add an output layer 
-    model.add(Dense(out_size, activation='softmax'))
+    model.add(Dense(out_size))
+    model.add(BatchNormalization())
+    model.add(Softmax(axis=-1))
 
 
     opt = set_opt(OPT, lr)
