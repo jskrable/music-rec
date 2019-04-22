@@ -18,7 +18,7 @@ Alternatively, visit the Million Song Dataset's site to download the file and un
 Training the neural network may take some trial and error based on the hardware available. Running 
 ```./lib/main.py``` will attempt to train the network using the full dataset and default hyperparameters.
 
-Once the network is trained and a workable model is created, you can run the web app that recommends songs. To standup web app, first run 
+Once the network is trained and a workable model is created, you can run the web app that recommends songs. First, move your best working model (and all the associated files) into ```./model/working/```. Then, to standup web app, first run 
 ```
 cd frontend
 python -m http.server
@@ -27,7 +27,7 @@ This will serve the static site html pages
 
 In another terminal window, run
 ```
-python api/api.py
+python src/api.py
 ```
 This will stand up the middleware api endpoints.
 
