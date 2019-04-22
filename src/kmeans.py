@@ -7,32 +7,36 @@ jack skrable
 """
 
 import numpy as np
+import seaborn as sns
 from sklearn.cluster import KMeans
+from sklearn.externals import joblib
 
-def kmeans(X, clusters):
+def kmeans(X, clusters, archive=None):
 
     # Perform kmeans classifier
-    kmeans = KMeans(n_clusters=clusters, random_state=0).fit(X)
+    kmeans = KMeans(n_clusters=clusters).fit(X)
     # Get classes
     classes = kmeans.labels_.reshape(-1,1)
     # Normalize classes
-    classes = classes / (np.linalg.norm(classes) + 0.000000000001)
+    # classes = classes / (np.linalg.norm(classes) + 0.000000000001)
     # Append to input matrix
     X = np.hstack((X, kmeans.labels_.reshape(-1,1)))
+
+    if archive is not None:
+        joblib.dump(kmeans, archive+'/kmeans/model.joblib')
+
     return X
 
 
 
 def find_optimal_k(X):
 
-    for k in range (1, 21):
- 
-        # Create a kmeans model on our data, using k clusters.  random_state helps ensure that the algorithm returns the same results each time.
-        kmeans_model = KMeans(n_clusters=k, random_state=1).fit(X)
-        
-        # These are our fitted labels for clusters -- the first cluster has label 0, and the second has label 1.
-        labels = kmeans_model.labels_
-     
-        # Sum of distances of samples to their closest cluster center
-        interia = kmeans_model.inertia_
-        print("k:",k, "cost:", interia)
+    print('Trying K = 1 through 21...')
+    results = {k: KMeans(n_clusters=k).fit(X).inertia_ for k in range(1, 21)}
+    print('Plotting...')
+    sns.lineplot(list(results.keys()), list(results.values()), marker='o')
+    plt.xlabel('K-value')
+    plt.ylabel('Distortion')
+    plt.title('Finding Optimal K-value')
+    plt.grid()
+    plt.show()
