@@ -59,8 +59,8 @@ t_nn = time.time()
 print('Neural network trained in', round((t_nn - t_preproc), 2), 'seconds.')
 
 print('Evaluating model and saving class probabilities...')
-predDF = pd.DataFrame.from_records(model_simple.predict(pp.scaler(X, 'robust'))
-predDF.to_pickle('./data/model_prob.pkl')
+predDF = pd.DataFrame.from_records(model_simple.predict(pp.scaler(X, 'robust')))
+predDF.to_pickle(path + '/model_prob.pkl')
 
 # Perform k-Means clustering and send classified data through neural network
 ###############################################################################
@@ -78,4 +78,6 @@ print('Hybrid k-Means neural network trained in',
 
 # Review
 ###############################################################################
-plot(X, kmX[:,-1])
+# plot(X, kmX[:,-1])
+plot.plot_nn_training(path, 'loss')
+plot.plot_nn_training(path, 'acc')

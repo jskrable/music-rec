@@ -94,51 +94,55 @@ def preprocess_predictions(df):
     return output
 
 
-@app.route("/recommend", methods=["GET"])
-def recommend():
-        # initialize the data dictionary that will be returned from the
-        # view
-    data = {"success": False}
+def get_recs(song_ids):
 
-    # GET requests
-    if flask.request.method == "GET":
+    song_ids = song_ids.split(',')
+    # Lookup filenames by song id
+    files = [song_file_map[id] for id in song_ids]
 
-            # Separate this into a new module for prediction preprocssing
-            # Snag query string of song IDs
-        song_ids = flask.request.args.get('songs')
-        song_ids = song_ids.split(',')
-        # Lookup filenames by song id
-        files = [song_file_map[id] for id in song_ids]
-        # Extract raw data from files
-        df = read.extract_song_data(files)
-        df = pp.convert_byte_data(df)
-        df = df.fillna(0)
-        # Vectorize
-        X = preprocess_predictions(df)
-        # Get saved scaler
-        # X = scaler.transform(X)
-        print('Model predicting...')
-        with graph.as_default():
-            predictions = model.predict(X)
+    # Extract raw data from files
+    df = read.extract_song_data(files)
+    df = pp.convert_byte_data(df)
+    df = df.fillna(0)
 
-        classes = [column_maps['target'][i.argmax()] for i in predictions]
-        print(classes)
+    # Vectorize
+    X = preprocess_predictions(df)
+    # Get saved scaler
+    # X = scaler.transform(X)
+    print('Model predicting...')
+    with graph.as_default():
+        predictions = model.predict(X)
+
+    classes = [column_maps['target'][i.argmax()] for i in predictions]
 
     model_prob = probDF[probDF.columns[:-1]].values
 
-    # TODO fix this, always returning same song
-    # rec_ids = [probDF.iloc[np.argmin(
-    #                        np.min(
-    #                            np.sqrt((pred - model_prob)**2)))].id
-    #            for pred in predictions]
     rec_ids = [probDF.iloc[np.argmin(np.min(np.sqrt((pred - model_prob)**2),axis=1))].id
                 for pred in predictions]
 
     recs = lookupDF.loc[lookupDF.metadata_songs_song_id.isin(
         rec_ids)].to_dict('records')
 
+    return classes, recs
+
+
+@app.route("/recommend", methods=["GET"])
+def recommend():
+    # Initialize response
+    data = {"success": False}
+
+    # GET requests
+    if flask.request.method == "GET":
+
+        # Snag query string of song IDs
+        song_ids = flask.request.args.get('songs')
+        # Get classifications and recommendations
+        classes, recs = get_recs(song_ids)
+
+    print(classes)
     print(recs)
 
+    # Create response entity
     data['entity'] = {'classes': classes}
     data['entity'].update({'recommendations': recs})
 

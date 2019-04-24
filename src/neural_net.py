@@ -17,7 +17,8 @@ from keras import initializers
 from keras.models import model_from_json
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, LeakyReLU, BatchNormalization, Activation, Softmax
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, CSVLogger
+from keras.constraints import maxnorm
 from keras.utils import to_categorical
 from keras import backend as K
 
@@ -45,10 +46,16 @@ def deep_nn(X, y, label, path=None):
 
     K.clear_session()
 
+    try:
+        path += ('/' + label)
+        os.mkdir(path)
+    except FileExistsError:
+        print(path, 'already exists.')
+
     # Globals
     lr = 0.0001
-    epochs = 1000
-    batch_size = 52
+    epochs = 500
+    batch_size = 50
     OPT = 'adadelta'
 
     t = time.time()
@@ -66,66 +73,45 @@ def deep_nn(X, y, label, path=None):
     in_size = X.shape[1]
 
     # Hyperparams for tweaking
-    hidden_1_size = 512
-    hidden_2_size = 148
-    hidden_3_size = 52
+    hidden_1_size = 400
+    hidden_2_size = 150
+    hidden_3_size = 50
 
     # Modify this when increasing artist list target
     out_size = y.shape[1]
 
     # Split up input to train/test/validation
     print('Splitting to train, test, and validation sets...')
-    X_train, X_test, X_valid = np.split(X, [int(.70 * len(X)), int(.85 * len(X))])
-    y_train, y_test, y_valid = np.split(y, [int(.70 * len(y)), int(.85 * len(y))])
+    X_train, X_test, X_valid = np.split(X, [int(.6 * len(X)), int(.8 * len(X))])
+    y_train, y_test, y_valid = np.split(y, [int(.6 * len(y)), int(.8 * len(y))])
 
     # Initialize the constructor
     model = Sequential()
 
+    # Function to add hidden layers
+    def add_hidden_layer(s, b=False, a=0.3, d=0.0):
+
+        if d > 0:
+            model.add(Dense(s, kernel_initializer='normal',
+                            kernel_constraint=maxnorm(3)))
+        else:
+            model.add(Dense(s))
+        if b:
+            model.add(BatchNormalization())
+        model.add(LeakyReLU(alpha=a))
+        model.add(Dropout(d))
+
     # Add an input layer 
-    model.add(Dense(12, input_shape=(in_size,), activation='relu'))
-                    # kernel_initializer='orthogonal'))
-
-    # Add hidden 1
-    model.add(Dense(in_size))
+    model.add(Dense(in_size, input_shape=(in_size,), activation='relu',
+                    kernel_initializer='normal', kernel_constraint=maxnorm(3)))
     model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.5))
 
-    # # Add hidden 1
-    # model.add(Dense(hidden_1_size))
-    # model.add(BatchNormalization())
-    # model.add(LeakyReLU(alpha=0.3))
-    # model.add(Dropout(0.2))
-
-    # # Repeat hidden 1
-    # model.add(Dense(hidden_1_size))
-    # model.add(BatchNormalization())
-    # model.add(LeakyReLU(alpha=0.2))
-    # model.add(Dropout(0.5))
-
-    # Add hidden 2
-    model.add(Dense(hidden_2_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.2))
-
-    # Repeat hidden 2
-    model.add(Dense(hidden_2_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Dropout(0.2))
-
-    # Repeat hidden 2
-    model.add(Dense(hidden_2_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.3))
-    model.add(Dropout(0.1))
-
-    # Add hidden 3
-    model.add(Dense(hidden_3_size))
-    model.add(BatchNormalization())
-    model.add(LeakyReLU(alpha=0.2))
-    # model.add(Dropout(0.05))
+    # Add hidden layers
+    add_hidden_layer(in_size, True, 0.3, 0.5)
+    add_hidden_layer(hidden_2_size, True, 0.3, 0.3)
+    add_hidden_layer(hidden_2_size, True, 0.3, 0.3)
+    add_hidden_layer(hidden_3_size, True, 0.3, 0.1)
 
     # Add an output layer 
     model.add(Dense(out_size))
@@ -144,12 +130,16 @@ def deep_nn(X, y, label, path=None):
     tensorboard = TensorBoard(log_dir=str('./logs/'+label+'/'+name+'.json'),
                               histogram_freq=1,
                               write_graph=True,
-                              write_images=False)                 
+                              write_images=False)   
+
+    csv_logs = CSVLogger(filename=path+'/logs.csv',
+                         separator=',',
+                         append=False)      
 
     print('Training...') 
     model.fit(X_train, y_train, validation_data=(X_valid, y_valid),
               epochs=epochs, batch_size=batch_size, verbose=1, 
-              shuffle=True, callbacks=[tensorboard])
+              shuffle=True, callbacks=[csv_logs])
 
     print('Evaluating...')
     y_pred = model.predict(X_test)
@@ -157,8 +147,6 @@ def deep_nn(X, y, label, path=None):
     print(score)
 
     print('Saving model...')
-    path += ('/' + label)
-    os.mkdir(path)
     # Save model structure json
     model_json = model.to_json()
     with open(path + '/model.json', 'w') as file:

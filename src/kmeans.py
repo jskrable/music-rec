@@ -8,6 +8,7 @@ jack skrable
 
 import numpy as np
 import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 
@@ -17,11 +18,8 @@ def kmeans(X, clusters, archive=None):
     kmeans = KMeans(n_clusters=clusters).fit(X)
     # Get classes
     classes = kmeans.labels_.reshape(-1,1)
-    # Normalize classes
-    # classes = classes / (np.linalg.norm(classes) + 0.000000000001)
     # Append to input matrix
     X = np.hstack((X, kmeans.labels_.reshape(-1,1)))
-
     if archive is not None:
         joblib.dump(kmeans, archive+'/kmeans/model.joblib')
 
