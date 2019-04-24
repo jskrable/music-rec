@@ -6,6 +6,10 @@ plot.py
 jack skrable
 """
 
+import sys
+import os
+import logging as log
+import imageio as im
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -67,3 +71,38 @@ def plot_nn_training(path, col):
     plt.grid()
     plt.tight_layout()
     plt.show()
+
+
+
+def animate_training(path):
+
+    std = pd.read_csv(path + '/std/logs.csv')
+    hyb = pd.read_csv(path + '/hyb/logs.csv')
+
+    df = pd.DataFrame.from_records({'epoch': std.Step, 'nn':std.Value, 'hyb':hyb.Value})
+
+    for i in range(len(df)):
+        sns.lineplot(df[:i].epoch, df[:i].nn, c='b')
+        sns.lineplot(df[:i].epoch, df[:i].hyb, c='r')
+        plt.ylim(0,0.7)
+        plt.xlim(0,200)
+        plt.xlabel('epochs')
+        plt.ylabel('accuracy')
+        plt.legend(labels=['standard nn','k-means augmented nn'])
+        plt.savefig('./animate/' + (str(i)+'.png').zfill(7), format='png', dpi=300)
+        plt.close()
+
+
+    image_dir = os.fsencode(path)
+    files = os.listdir(image_dir)
+
+    # Get list of filenames including path
+    fnames = [path+os.fsdecode(f) for f in files if f.endswith(b'.png')]
+    fnames.sort()
+
+    # Read images
+    images = [im.imread(f) for f in fnames]
+
+    # Write GIF
+    # Duration per frame
+    im.mimsave(os.path.join(path+'animate.gif'), images, duration=0.10)
